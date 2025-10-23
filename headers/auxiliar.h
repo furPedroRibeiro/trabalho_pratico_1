@@ -1,15 +1,7 @@
-//Aluno 1: Pedro Luis de Alencar Ribeiro N° USP: 15590852
-//Aluno 2: Bianca Duarte Batista Lacerda N° USP: 15443221
+#include "default.h"
 
-//esse arquivo de cabeçalho .h tem como essência definir as funções, variáveis, etc. que podem ser usadas e implementadas por todos os arquivos .c, portanto são funções, estruturas de dados e variáveis auxiliares
-#ifndef AUXILIAR_CRIAR_H
-#define AUXILIAR_CRIAR_H
-
-//inclui as principais bibliotecas e as únicas utilizadas neste projeto
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
+#ifndef AUXILIAR_H
+#define AUXILIAR_H
 
 //estrutura de dados do tipo lista para armazenar os registros antes de escrever no arquivo de dados que será gerado, a lista possui encadeamento simples porque não há necessidade dos dados serem ordenados nem nada do tipo, a única necessidade é que a lista exista e o encadeamento seja feito de maneira correta
 typedef struct registro{
@@ -32,10 +24,26 @@ typedef struct indice{
   struct indice *antIndice;
 } indice;
 
+// Estrutura auxiliar para armazenar os campos de um registro(usada para a funcionalidade 3 e 4)
+struct registro_2 {
+    int idPessoa, idadePessoa;
+    int tamNomePessoa, tamNomeUsuario;
+    char nomePessoa[100];
+    char nomeUsuario[100];
+};
+
+typedef struct indice2{
+  int idPessoa;
+  int64_t byteOffset;
+} indice2;
+
+registro* raizListaPessoas;
+indice* raizListaIndice;
+
+//funções para as funcionalidades 1 e 2
 //FUNÇÃO DE LER O ARQUIVO CSV
 void lerCSV(FILE* arquivoEntrada, FILE* arquivoDados, FILE* arquivoIndice);
-//função para criar o cabeçalho do arquivo de dados, se der errado retorna 0
-void criaCabecalhoArquivoDados(FILE* arquivoDados, char status, int quantidadePessoas, int quantidadeRemovidos, int64_t proxByteoffset);
+void criaCabecalhoArquivoDados(arqDados, status, quantidadePessoas, quantidadeRemovidos, proxByteoffset);
 //função para inserir um registro no arquivo de dados, se der errado retorna 0
 void insereRegistro(registro* novoRegistro, FILE* arquivoDados, int quantidadeRemovidos, int64_t proxByteoffset);
 //função para inserir os registros de índice no arquivo de índice
@@ -44,6 +52,12 @@ void insereRegistroIndice(indice* raizListaIndice, FILE* arquivoIndice);
 void criarNoRegistro(registro* novoRegistro, char *campoIdPessoa, char *campoIdadePessoa, char *campoNomePessoa, char *campoNomeUsuario, int tamRegistroBytes);
 //Função para criar um nó e adicioná-lo a lista de registros do arquivo de indice, não retorna nada
 void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, int64_t byteoffset);
+
+//funções para as funcionalidade 3 e 4
+void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario);
+int64_t buscaBinariaIndice(indice2 *vetor, int tamanho, int idBuscado);
+void imprimirRegistroPorByteOffset(FILE *arqPessoa, int64_t byteOffset, struct registro_2 reg);
+
 
 //função strsep aqui(não roda em windows a função strsep definida direto pelo GNU(se não me engano))
 char* meu_strsep(char** , const char* delim);

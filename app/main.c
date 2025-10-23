@@ -1,8 +1,7 @@
 //Aluno 1: Pedro Luis de Alencar Ribeiro N° USP: 15590852
 //Aluno 2: Bianca Duarte Batista Lacerda N° USP: 15443221
 
-#include "../headers/criarArquivos.h"
-#include "../headers/leituraBuscaArquivos.h"
+#include "../headers/functions.h"
 
 //aqui roda a main, que lê a entrada e depois roda um switch case para selecionar a funcionalidade a ser executada
 
