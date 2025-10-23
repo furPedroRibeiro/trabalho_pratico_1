@@ -1,0 +1,5 @@
+1 indice4.bin
+2 dados.csv pessoas4.bin indice4.bin
+3 pessoas4.bin
+4 pessoas4.bin indice4.bin 1
+1 idPessoa=96
