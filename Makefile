@@ -19,6 +19,3 @@ run:
 clean:
 		rm $(OBJ)/*
 		rm ./*.bin
-
-zip:
-		zip -r code.zip $(SRC) $(APP) $(HDR) $(OBJ) Makefile
