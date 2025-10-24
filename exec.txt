@@ -3,3 +3,13 @@
 3 pessoas4.bin
 4 pessoas4.bin indice4.bin 1
 1 idPessoa=96
+
+no trabalho prático 1:
+
+Observações sobre o trabalho: nas funcionalidades 5, 7 e 10 é necessário usar a funcionalidade 4, eu não sei se é pra usar a mesma lógica ou se é literal pra usar a mesma função, da pra perguntar pra algum monitor. Dito isso, eu acho melhor modularizar mais a funcionalidade 4, já que vai precisar usar ela em algumas outras funcionalidades, modularizar que eu digo, se atribui ao fato de que a busca deve ser feita assim:
+-> existe uma estrutura de dados pronta para receber cada nó(pode ser um vetor imagino eu)
+-> chama uma função que faz apenas a busca e retorna essa estrutura de dados como ponteiro ou algo do tipo.
+-> depois essa estrutura é usada de acordo com a necessidade de cada funcionalidade, no caso da 4, é apenas pra printar, no caso da 5, é pra deletar(logicamente), e assim em diante.
+
+funcionalidades 6, 8 e 9 são do caiçara
+funcionalidades 5, 7 e 10 são da Bianca
