@@ -6,7 +6,6 @@
 
 //FUNCIONALIDADE 1:
 
-
 void criarIndice(char *nomeArquivoIndice){
   //caminho onde os binário devem ser criados:
   char caminho[100] = "./";
@@ -36,8 +35,8 @@ void criarIndice(char *nomeArquivoIndice){
 }
 
 
-//FUNCIONALIDADE 2:
 
+//FUNCIONALIDADE 2:
 
 void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoDados, char *nomeArquivoIndice){
   //testando existência dos arquivos:
@@ -109,8 +108,8 @@ void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoDados, char *n
 }
 
 
-//FUNCIONALIDADE 3:
 
+//FUNCIONALIDADE 3:
 
 // Definição da variável global
 struct registro_2 reg;
@@ -171,7 +170,10 @@ void listarRegistros(char *nomeArquivoEntrada){
     fclose(arqPessoa);
 }
 
-//Funcionalidade 4
+
+
+//FUNCIONALIDADE 4:
+
 void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //abertura dos arquivos
     char caminho[100] = "./";

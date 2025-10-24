@@ -3,7 +3,7 @@
 
 #include "default.h"
 
-//esse arquivo de cabeçalho .h tem como essência definir as funções, variáveis, etc. que podem ser usadas e implementadas por utilidades.c e outros arquivos
+//esse arquivo de cabeçalho é referente ao arquivo utilidades.c, disponibilizado na página da disciplina
 #ifndef UTILIDADES_H
 #define UTILIDADES_H
 

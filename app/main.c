@@ -80,6 +80,19 @@ int main(){
       buscarRegistros(nomeArquivoEntrada, nomeArquivoIndice, n);
       break;
     //caso o usuário digite alguma opção que não é de 1 a 4
+    case 5:
+      //
+      break;
+    case 6:
+      break;
+    case 7:
+      break;
+    case 8:
+      break;
+    case 9:
+      break;
+    case 10:
+      break;
     default: 
       printf("Opcao invalida");
   }

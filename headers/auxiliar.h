@@ -1,6 +1,7 @@
 //Aluno 1: Pedro Luis de Alencar Ribeiro N° USP: 15590852
 //Aluno 2: Bianca Duarte Batista Lacerda N° USP: 15443221
 
+//inclui as bibliotecas padrão 
 #include "default.h"
 
 #ifndef AUXILIAR_H
@@ -35,15 +36,18 @@ struct registro_2 {
     char nomeUsuario[100];
 };
 
+//estrutura igual a estrutura indice acima, mas essa é usada para a funcionalidade 4
 typedef struct indice2{
   int idPessoa;
   int64_t byteOffset;
 } indice2;
 
+//define as variáveis para raíz da lista 1 e da lista 2
 extern registro* raizListaPessoas;
 extern indice* raizListaIndice;
 
 //funções para as funcionalidades 1 e 2
+
 //FUNÇÃO DE LER O ARQUIVO CSV
 void lerCSV(FILE* arquivoEntrada, FILE* arquivoDados, FILE* arquivoIndice);
 void criaCabecalhoArquivoDados(FILE *arqDados, char status, int quantidadePessoas, int quantidadeRemovidos, int64_t proxByteoffset);

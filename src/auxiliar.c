@@ -1,10 +1,11 @@
 //Aluno 1: Pedro Luis de Alencar Ribeiro N° USP: 15590852
 //Aluno 2: Bianca Duarte Batista Lacerda N° USP: 15443221
+//aqui estão todas as funções que serão usadas para que as funcionalidades 1 a 10 sejam implementadas
 
 #include "../headers/auxiliar.h"
 #include "../headers/utilidades.h"
 
-// Definição das variáveis globais (declaradas em auxiliar.h)
+// Definição(atribuição) das variáveis globais (declaradas em auxiliar.h)
 registro* raizListaPessoas = NULL;
 indice* raizListaIndice = NULL;
 

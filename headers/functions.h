@@ -4,13 +4,20 @@
 #include "./default.h"
 #include "./auxiliar.h"
 
-//esse arquivo de cabeçalho .h tem como essência definir as funções, variáveis, etc. que serão usadas e implementadas em create_file.c
+//esse arquivo é usado para guiar o desenvolvimento de functions.c, que por sua vez é o arquivo que contém as funcionalidades do trabalho prático nomeadas
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
+//funcionalidade 1
 void criarIndice(char *nomeArquivoIndice);
+
+//funcionalidade 2
 void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoSaida, char *nomeArquivoIndice);
+
+//funcionalidade 3
 void listarRegistros(char *nomeArquivoEntrada);
+
+//funcionalidade 4
 void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n);
 
 #endif
