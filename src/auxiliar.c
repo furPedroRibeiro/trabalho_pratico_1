@@ -4,24 +4,17 @@
 #include "../headers/auxiliar.h"
 #include "../headers/utilidades.h"
 
-//definindo que as raízes são nulas
-raizListaPessoas = NULL;
-raizListaIndice = NULL;
+// Definição das variáveis globais (declaradas em auxiliar.h)
+registro* raizListaPessoas = NULL;
+indice* raizListaIndice = NULL;
 
-//definindo ultimo elemento = NULL
+// Variáveis globais internas (static = visíveis só neste arquivo)
+static registro* ultimoElemento = NULL;
+static char status = '0';
+static int quantidadePessoas = 0;
+static int quantidadeRemovidos = 0;
+static int64_t proxByteoffset = 17;
 
-registro* ultimoElemento = NULL;
-
-//definindo variáveis para o cabeçalho do arquivo de dados
-//abriremos o arquivo com status consistente
-char status = '0';
-//contador da quantidade de pessoas presentes no arquivo de dados
-int quantidadePessoas = 0;
-//contador da quantidade de pessoas removidas no arquivo de dados
-int quantidadeRemovidos = 0;
-//definindo variável para o próximo byteoffset disponível
-//pula o cabeçalho, por isso começa em 17
-int64_t proxByteoffset = 17;
 
 //essa função lê o arquivo csv, faz a inserção no arquivo de dados a cada linha lida do csv, e vai montando a lista duplamente encadeada para o índice ser inserido depois no arquivo de índice
 void lerCSV(FILE* arquivoDados, FILE* arquivoIndice, FILE* arquivoEntrada){

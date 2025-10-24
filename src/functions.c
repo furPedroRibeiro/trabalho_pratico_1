@@ -114,8 +114,6 @@ void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoDados, char *n
 
 // Definição da variável global
 struct registro_2 reg;
-//aproveitando a struct que ja foi criada em auxiliar.h
-typedef struct indice indice;
 
 //Funcionalidade 3:
 void listarRegistros(char *nomeArquivoEntrada){
@@ -217,7 +215,7 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     fseek(arquivoIndice, 12, SEEK_SET);
 
     //aloca memória
-    indice *vetorIndice = malloc(qtdIndice * sizeof(indice2));
+    indice2 *vetorIndice = malloc(qtdIndice * sizeof(indice2));
     
     //carrega o índice completo no vetor
     for(int i = 0; i < qtdIndice; i++){

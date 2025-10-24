@@ -37,13 +37,13 @@ typedef struct indice2{
   int64_t byteOffset;
 } indice2;
 
-registro* raizListaPessoas;
-indice* raizListaIndice;
+extern registro* raizListaPessoas;
+extern indice* raizListaIndice;
 
 //funções para as funcionalidades 1 e 2
 //FUNÇÃO DE LER O ARQUIVO CSV
 void lerCSV(FILE* arquivoEntrada, FILE* arquivoDados, FILE* arquivoIndice);
-void criaCabecalhoArquivoDados(arqDados, status, quantidadePessoas, quantidadeRemovidos, proxByteoffset);
+void criaCabecalhoArquivoDados(FILE *arqDados, char status, int quantidadePessoas, int quantidadeRemovidos, int64_t proxByteoffset);
 //função para inserir um registro no arquivo de dados, se der errado retorna 0
 void insereRegistro(registro* novoRegistro, FILE* arquivoDados, int quantidadeRemovidos, int64_t proxByteoffset);
 //função para inserir os registros de índice no arquivo de índice
