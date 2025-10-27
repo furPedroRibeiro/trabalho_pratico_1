@@ -8,11 +8,11 @@
 int main(){
   //variáveis que podem ser usadas para chamadas e execução de funções:
   //guarda o ponteiro para o nome de arquivo de entrada
-  char *nomeArquivoEntrada;
+  char *nomeArquivoEntradaPessoa;
   //guarda o ponteiro para o nome de arquivo de índice
-  char *nomeArquivoIndice;
+  char *nomeArquivoIndicePessoa;
   //guarda o ponteiro para o nome de arquivo de saída
-  char *nomeArquivoSaida;
+  char *nomeArquivoSaidaPessoa;
 
   //primeiro deve-se receber a entrada do usuário para saber a saída desejada e qual função executar
   
@@ -45,45 +45,54 @@ int main(){
     //funcionalidade 1: criar arquivo de index apenas com cabeçalho
     case 1:
       //obtem o nome do arquivo de indice passado como parâmetro
-      nomeArquivoIndice = strtok(NULL, " ");
-      criarIndice(nomeArquivoIndice);
+      nomeArquivoIndicePessoa = strtok(NULL, " ");
+      criarIndice(nomeArquivoIndicePessoa);
 
       break;
     //funcionalidade 2: faz a leitura do arquivo csv, atualiza o arquivo de índice e e cria o arquivo binário de dados 
     case 2:
       //obtem o nome do arquivo de entrada passado como parametro
-      nomeArquivoEntrada = strtok(NULL, " ");
+      nomeArquivoEntradaPessoa = strtok(NULL, " ");
       //obtem o nome do arquivo de saida passado como parametro
-      nomeArquivoSaida = strtok(NULL, " ");
+      nomeArquivoSaidaPessoa = strtok(NULL, " ");
       //obtem o nome do arquivo de índice passado como parametro
-      nomeArquivoIndice = strtok(NULL, " ");
+      nomeArquivoIndicePessoa = strtok(NULL, " ");
 
       //chama a funcionalidade 2
-      criarArquivoDados(nomeArquivoEntrada, nomeArquivoSaida, nomeArquivoIndice);
+      criarArquivoDados(nomeArquivoEntradaPessoa, nomeArquivoSaidaPessoa, nomeArquivoIndicePessoa);
 
       break;
     //funcionalidade 3: printa na tela todos os registros que vão ser lidos do arquivo de dados
     case 3: 
       //obtem o nome do arquivo de entrada passado como parametro
-      nomeArquivoEntrada = strtok(NULL, " ");
+      nomeArquivoEntradaPessoa = strtok(NULL, " ");
       //chama a funcionalidade 3
-      listarRegistros(nomeArquivoEntrada);
+      listarRegistros(nomeArquivoEntradaPessoa);
       break;
     case 4:
       //obtem o nome do arquivo de entrada passado como parametro
-      nomeArquivoEntrada = strtok(NULL, " ");
+      nomeArquivoEntradaPessoa = strtok(NULL, " ");
       //obtem o nome do arquivo de indice passado como parametro
-      nomeArquivoIndice = strtok(NULL, " ");
+      nomeArquivoIndicePessoa = strtok(NULL, " ");
       //obtem o parametro n
       parametro = strtok(NULL, " ");
       int n = atoi(parametro);
-      buscarRegistros(nomeArquivoEntrada, nomeArquivoIndice, n);
+      buscarRegistros(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, n);
       break;
     //caso o usuário digite alguma opção que não é de 1 a 4
     case 5:
       //
       break;
     case 6:
+      //obtém nome do arquivo binário de pessoas gerado anteriormente:
+      nomeArquivoEntradaPessoa = strtok(NULL, " ");
+      //obtém nome do arquivo binário de índice gerado anteriormente:
+      nomeArquivoIndicePessoa = strtok(NULL, " ");
+      //obtém n que diz quantas vezes a inserção vai acontecer
+      char *numLoop = strtok(NULL, " ");
+      int n = atoi(numLoop);
+      //chama funcionalidade 6:
+      inserirUnicoRegistro(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, n);
       break;
     case 7:
       break;

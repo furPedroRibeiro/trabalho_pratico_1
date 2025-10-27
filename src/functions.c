@@ -4,6 +4,8 @@
 #include "../headers/functions.h"
 #include "../headers/utilidades.h"
 
+
+
 //FUNCIONALIDADE 1:
 
 void criarIndice(char *nomeArquivoIndice){
@@ -298,4 +300,75 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
 
     free(vetorIndice);
     fclose(arqPessoa);
+}
+
+
+
+//FUNCIONALIDADE 6
+
+void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
+    //a inserção será feita no final do arquivo, mas precisamos atualizar também o cabeçalho, então o arquivo será aberto com rb+
+    FILE *arqDados = fopen(nomeArquivoPessoa, "rb+");
+    if(arqDados == NULL){
+        puts("Falha no processamento do arquivo.");
+        return;
+    }
+    //definindo status como inconsistente:
+    char statusInconsistente = '0';
+    fseek(arqDados, 0, SEEK_SET);
+    fwrite(&statusInconsistente, 1, sizeof(char), arqDados);
+    fseek(arqDados, 0, SEEK_SET);
+
+    //é necessário ler o cabeçalho do arquivo para atualizar o mesmo depois 
+    cabecalhoPessoa* cabecalho = lerCabecalho(arqDados);
+    //na hora em que o cabeçalho é lido, o proxByteoffset ainda não foi atualizado, portanto o proxByteoffset do cabecalho é importante para que possamos inserir o byteoffset certo no arquivo de indice
+    int64_t byteoffset;
+
+    //abrindo arquivo de índice, que também deve ser atualizado:
+    FILE *arqIndice = fopen(nomeArquivoIndice, "rb+");
+    if(arqIndice == NULL){
+        puts("Falha no processamento do arquivo.");
+        return;
+    }
+    int numRegAtivos = cabecalho->quantidadePessoas;
+    //definindo status como inconsistente:
+    fseek(arqIndice, 0, SEEK_SET);
+    fwrite(&statusInconsistente, 1, sizeof(char), arqIndice);
+    fseek(arqIndice, 0, SEEK_SET);
+    //lê o arquivo de índice para memória primária
+    noIndice *indices = lerArquivoIndice(arqIndice, numRegAtivos);
+    
+    //devemos captar agora n entradas do usuário, e a cada entrada é feita uma inserção no arquivo de dados pessoa
+    //um while é usado
+    int i = 0;
+    while(i < n){
+        //é necessário ler o cabeçalho do arquivo para utilizar as informações contidas nele 
+        cabecalhoPessoa* cabecalhoAtual = lerCabecalho(arqDados);
+        //vamos captar agora mais uma entrada do usuário chamando uma função, que devolve um array nó com os dados a serem inseridos 
+        noRegistroUnico *regUnico = lerEntradaInsercaoUnica();
+        //depois da entrada ser captada, devemos fazer a inserção no arquivo de dados pessoa
+        insereRegistroUnicoPessoa(arqDados, regUnico, cabecalhoAtual);
+        //é necessário também inserir no vetor de índices o novo registro
+        insereRegistroUnicoVetorIndice(indices, (cabecalhoAtual->quantidadePessoas)+1, regUnico->idPessoa, byteoffset);
+        //essa função armazena novamente o arquivo de índice, agora atualizado
+        insereIndice(indices, arqIndice, (cabecalhoAtual->quantidadePessoas)+1);
+        //desalocando cabecalho atual para que ele seja lido de novo no começo do while
+        free(cabecalhoAtual);
+        free(regUnico);
+    }
+    //depois de toda a funcionalidade ser executada, basta voltar o status consistente para os 2 arquivos e desalocar o que foi usado de memória, além de fechar os 2 arquivos
+    free(cabecalho);
+
+    char statusConsistente = '1';
+
+    fseek(arqDados, 0, SEEK_SET);
+    fwrite(&statusConsistente, 1, sizeof(char), arqDados);
+    fseek(arqDados, 0, SEEK_SET);
+    
+    fseek(arqIndice, 0, SEEK_SET);
+    fwrite(&statusConsistente, 1, sizeof(char), arqIndice);
+    fseek(arqIndice, 0, SEEK_SET);
+
+    fclose(arqDados);
+    fclose(arqIndice);
 }
