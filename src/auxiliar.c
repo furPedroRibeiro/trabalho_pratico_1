@@ -491,19 +491,19 @@ void insereRegistroUnicoPessoa(FILE *nomeArquivoPessoa, noRegistroUnico* regUnic
   int64_t proxByteoffset = cabecalho->proxByteoffset + tamRegistro + 5;
   //escreve no cabeçalho:
   fseek(nomeArquivoPessoa, 1, SEEK_SET);
-  fwrite(&quantidadePessoas, 1, sizeof(int), nomeArquivoPessoa);
+  fwrite(&quantidadePessoas, sizeof(int), 1, nomeArquivoPessoa);
   fseek(nomeArquivoPessoa, 9, SEEK_SET);
-  fwrite(&proxByteoffset, 1, sizeof(int64_t), nomeArquivoPessoa);
+  fwrite(&proxByteoffset, sizeof(int64_t), 1, nomeArquivoPessoa);
 }
 
-noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n){
+noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n){
   //o arquivo já está aberto, e n é o número de registros ativos
   //o array para o vetor de indices é criada com 1 espaço a mais porque vamos inserir um novo registro a esse array posteriormente, então precisa ter esse espaço para que ocorra o deslocamento e a inserção correta do novo registroz
-  noIndice *indices = malloc((n) * sizeof(noIndice));
+  noIndice *indices = malloc((n+mais_n) * sizeof(noIndice));
   fseek(nomeArquivoIndice, 12, SEEK_SET); //posiciona ponteiro de leitura no primeiro registro
   for(int i = 0; i < n; i++){
-    fread(&indices[i].idPessoa, 1, sizeof(int), nomeArquivoIndice);
-    fread(&indices[i].byteoffset, 1, sizeof(int64_t), nomeArquivoIndice);
+    fread(&indices[i].idPessoa, sizeof(int), 1, nomeArquivoIndice);
+    fread(&indices[i].byteoffset, sizeof(int64_t), 1, nomeArquivoIndice);
   }
   //depois da leitura, retorna o vetor de indices
   return indices;

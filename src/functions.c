@@ -334,7 +334,7 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
     fwrite(&statusInconsistente, 1, sizeof(char), arqIndice);
     fseek(arqIndice, 0, SEEK_SET);
     //lê o arquivo de índice para memória primária
-    noIndice *indices = lerArquivoIndice(arqIndice, numRegAtivos+n);
+    noIndice *indices = lerArquivoIndice(arqIndice, numRegAtivos, n);
     
     //devemos captar agora n entradas do usuário, e a cada entrada é feita uma inserção no arquivo de dados pessoa
     //um while é usado
@@ -350,6 +350,8 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
         insereRegistroUnicoVetorIndice(indices, (cabecalhoAtual->quantidadePessoas)+1, regUnico->idPessoa, cabecalhoAtual->proxByteoffset);
         //desalocando cabecalho atual para que ele seja lido de novo no começo do while
         free(cabecalhoAtual);
+        free(regUnico->nomePessoa);
+        free(regUnico->nomeUsuario);
         free(regUnico);
         i++;
     }
