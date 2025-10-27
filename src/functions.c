@@ -371,6 +371,9 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
     fwrite(&statusConsistente, 1, sizeof(char), arqIndice);
     fseek(arqIndice, 0, SEEK_SET);
 
+    binarioNaTela(arqDados);
+    binarioNaTela(arqIndice);
+
     fclose(arqDados);
     fclose(arqIndice);
 }
