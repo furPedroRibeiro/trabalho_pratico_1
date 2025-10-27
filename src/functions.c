@@ -321,8 +321,6 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
 
     //é necessário ler o cabeçalho do arquivo para atualizar o mesmo depois 
     cabecalhoPessoa* cabecalho = lerCabecalho(arqDados);
-    //na hora em que o cabeçalho é lido, o proxByteoffset ainda não foi atualizado, portanto o proxByteoffset do cabecalho é importante para que possamos inserir o byteoffset certo no arquivo de indice
-    int64_t byteoffset;
 
     //abrindo arquivo de índice, que também deve ser atualizado:
     FILE *arqIndice = fopen(nomeArquivoIndice, "rb+");
@@ -336,7 +334,7 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
     fwrite(&statusInconsistente, 1, sizeof(char), arqIndice);
     fseek(arqIndice, 0, SEEK_SET);
     //lê o arquivo de índice para memória primária
-    noIndice *indices = lerArquivoIndice(arqIndice, numRegAtivos);
+    noIndice *indices = lerArquivoIndice(arqIndice, numRegAtivos+n);
     
     //devemos captar agora n entradas do usuário, e a cada entrada é feita uma inserção no arquivo de dados pessoa
     //um while é usado
@@ -349,15 +347,17 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
         //depois da entrada ser captada, devemos fazer a inserção no arquivo de dados pessoa
         insereRegistroUnicoPessoa(arqDados, regUnico, cabecalhoAtual);
         //é necessário também inserir no vetor de índices o novo registro
-        insereRegistroUnicoVetorIndice(indices, (cabecalhoAtual->quantidadePessoas)+1, regUnico->idPessoa, byteoffset);
-        //essa função armazena novamente o arquivo de índice, agora atualizado
-        insereIndice(indices, arqIndice, (cabecalhoAtual->quantidadePessoas)+1);
+        insereRegistroUnicoVetorIndice(indices, (cabecalhoAtual->quantidadePessoas)+1, regUnico->idPessoa, cabecalhoAtual->proxByteoffset);
         //desalocando cabecalho atual para que ele seja lido de novo no começo do while
         free(cabecalhoAtual);
         free(regUnico);
+        i++;
     }
+    //essa função armazena novamente o arquivo de índice, agora atualizado
+    insereIndice(indices, arqIndice, cabecalho->quantidadePessoas + n);
     //depois de toda a funcionalidade ser executada, basta voltar o status consistente para os 2 arquivos e desalocar o que foi usado de memória, além de fechar os 2 arquivos
     free(cabecalho);
+    free(indices);
 
     char statusConsistente = '1';
 
