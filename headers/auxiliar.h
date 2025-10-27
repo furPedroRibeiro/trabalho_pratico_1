@@ -66,6 +66,40 @@ int64_t buscaBinariaIndice(indice2 *vetor, int tamanho, int idBuscado);
 void imprimirRegistroPorByteOffset(FILE *arqPessoa, int64_t byteOffset, struct registro_2 reg);
 
 
+//funções para a funcionalidade 6
+
+//nó que armazenará o registro de cabeçalho:
+
+typedef struct cabecalhoPessoa{
+  char status[2];
+  int quantidadePessoas;
+  int quantidadeRemovidos;
+  int64_t proxByteoffset;
+} cabecalhoPessoa;
+
+typedef struct noRegistroUnico{
+  int idPessoa;
+  char *nomePessoa;
+  int idadePessoa;
+  char *nomeUsuario;
+} noRegistroUnico;
+
+typedef struct noIndice{
+  int idPessoa;
+  int64_t byteoffset;
+} noIndice;
+
+cabecalhoPessoa* lerCabecalho(FILE *nomeArquivo);
+noRegistroUnico* lerEntradaInsercaoUnica();
+void insereRegistroUnicoPessoa(FILE *nomeArquivoPessoa, noRegistroUnico* regUnico, cabecalhoPessoa* cabecalho);
+noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n);
+void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset);
+void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho);
+
+//funções de uso geral
+int buscaBinariaVetorIndice(noIndice* indices, int tamanho, int idPessoa);
+char *removeEspacosEmBranco(char *campo);
+char *removerAspas(char *campo);
 //função strsep aqui(não roda em windows a função strsep definida direto pelo GNU(se não me engano))
 char* meu_strsep(char** , const char* delim);
 

@@ -394,3 +394,213 @@ void imprimirRegistroPorByteOffset(FILE *arqPessoa, int64_t byteOffset, struct r
     //usa função auxiliar para imprimir
     imprimirRegistro(reg.idPessoa, reg.idadePessoa, reg.tamNomePessoa, reg.nomePessoa, reg.tamNomeUsuario, reg.nomeUsuario);
 }
+
+
+
+// FUNÇÕES PARA FUNCIONALIDADE 6:
+
+cabecalhoPessoa* lerCabecalho(FILE *nomeArquivo){
+  cabecalhoPessoa *cabecalho = calloc(1, sizeof(cabecalhoPessoa)); //aloca memória para o cabecalho
+  
+  fseek(nomeArquivo, 0, SEEK_SET); //posiciona para ler status
+  fread(&cabecalho->status, sizeof(char), 1, nomeArquivo); //faz a leitura para status
+  cabecalho->status[1] = '\0';
+  fread(&cabecalho->quantidadePessoas, sizeof(int), 1, nomeArquivo);
+  fread(&cabecalho->quantidadeRemovidos, sizeof(int), 1, nomeArquivo);
+  fread(&cabecalho->proxByteoffset, sizeof(int64_t), 1, nomeArquivo);
+  return cabecalho; //após ler o cabecalho, retorna para a função
+}
+
+noRegistroUnico* lerEntradaInsercaoUnica(){
+  char bufferNomePessoa[100];
+  char bufferNomeUsuario[100];
+  noRegistroUnico *regUnico = calloc(1, sizeof(noRegistroUnico));
+  regUnico->nomePessoa = bufferNomePessoa;
+  regUnico->nomeUsuario = bufferNomeUsuario;
+
+  //vamos ler uma linha de entrada, usando a mesma lógica usada na main
+  //faz a leitura da entrada através de stdin
+  int c = 0; 
+  int i = 0;
+  char bufferEntrada[1024];
+  
+  // lê até EOF, \0 ou \n — cobre todos os casos possíveis porque a entrada no runcodes é de um jeito e pelo teclado para testes é de outro, então ao invés de usar fgets fizemos a adaptação para todos os tipos de terminação de entrada
+  while ((c = getchar()) != EOF && c != '\0' && c != '\n') {
+      if (i < sizeof(bufferEntrada) - 1) {
+        bufferEntrada[i++] = c;
+      } else {
+        //limpa o resto da entrada
+        while ((c = getchar()) != EOF && c != '\n');
+        break; // evita estouro de buffer(seg fault)
+      }
+  }
+  bufferEntrada[i] = '\0'; //coloca o \0 no fim da entrada para usar strtok corretamente
+
+  //lendo idPessoa, não pode ser nulo
+  char *parametro;
+  parametro = strtok(bufferEntrada, ",");
+  regUnico->idPessoa = atoi(parametro);
+  //lendo nome da pessoa
+  parametro = strtok(bufferEntrada, ",");
+  char *nomePessoa = removeEspacosEmBranco(parametro);
+  if(strcmp(nomePessoa, "NULO") == 0){
+    regUnico->nomePessoa = NULL;
+  } else{
+    regUnico->nomePessoa = removerAspas(nomePessoa);
+  }
+  //lendo idade
+  parametro = strtok(bufferEntrada, ",");
+  char *idadePessoa = removeEspacosEmBranco(parametro);
+  if(strcmp(idadePessoa, "NULO") == 0){
+    regUnico->idadePessoa = -1;
+  } else{
+    regUnico->idadePessoa = atoi(idadePessoa);
+  }
+  //lendo nome de usuário
+  parametro = strtok(bufferEntrada, ",");
+  char *nomeUsuario = removeEspacosEmBranco(parametro);
+  regUnico->nomeUsuario = removerAspas(nomeUsuario);
+
+  return regUnico;
+}
+
+void insereRegistroUnicoPessoa(FILE *nomeArquivoPessoa, noRegistroUnico* regUnico, cabecalhoPessoa *cabecalho){
+  fseek(nomeArquivoPessoa ,cabecalho->proxByteoffset, SEEK_SET); //posiciona ponteiro no próximo byteoffset disponível segundo o cabecalho
+  //definindo variáveis que não foram lidas
+  char status = '0';
+  int tamNomePessoa;
+  int tamNomeUsuario = strlen(regUnico->nomeUsuario);
+  if(regUnico->nomePessoa == NULL){
+    tamNomePessoa = 0;
+  } else{
+    tamNomePessoa = strlen(regUnico->nomePessoa);
+  }
+  int tamRegistro = tamNomePessoa + tamNomeUsuario + 16;
+  fwrite(&status, 1, sizeof(char), nomeArquivoPessoa);
+  fwrite(&tamRegistro, 1, sizeof(int), nomeArquivoPessoa);
+  fwrite(&regUnico->idPessoa, 1, sizeof(int), nomeArquivoPessoa);
+  fwrite(&regUnico->idadePessoa, 1, sizeof(int), nomeArquivoPessoa);
+  fwrite(&tamNomePessoa, 1, sizeof(int), nomeArquivoPessoa);
+  if(tamNomePessoa = 0){
+    fwrite(&regUnico->nomePessoa, tamNomePessoa, sizeof(char), nomeArquivoPessoa);
+  }
+  fwrite(&tamNomeUsuario, 1, sizeof(int), nomeArquivoPessoa);
+  fwrite(&regUnico->nomeUsuario, tamNomeUsuario, sizeof(char), nomeArquivoPessoa);
+
+  //depois que escreve tudo, precisamos atualizar o cabeçalho
+  int quantidadePessoas = cabecalho->quantidadePessoas;
+  quantidadePessoas++;
+  int64_t proxByteoffset = cabecalho->proxByteoffset + tamRegistro + 5;
+  //escreve no cabeçalho:
+  fseek(nomeArquivoPessoa, 1, SEEK_SET);
+  fwrite(&quantidadePessoas, 1, sizeof(int), nomeArquivoPessoa);
+  fseek(nomeArquivoPessoa, 9, SEEK_SET);
+  fwrite(&proxByteoffset, 1, sizeof(int64_t), nomeArquivoPessoa);
+}
+
+noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n){
+  //o arquivo já está aberto, e n é o número de registros ativos
+  //o array para o vetor de indices é criada com 1 espaço a mais porque vamos inserir um novo registro a esse array posteriormente, então precisa ter esse espaço para que ocorra o deslocamento e a inserção correta do novo registroz
+  noIndice indices[n+1];
+  fseek(nomeArquivoIndice, 12, SEEK_SET); //posiciona ponteiro de leitura no primeiro registro
+  for(int i = 0; i < n; i++){
+    fread(indices[i].idPessoa, 1, sizeof(int), nomeArquivoIndice);
+    fread(indices[i].byteoffset, 1, sizeof(int64_t), nomeArquivoIndice);
+  }
+  //depois da leitura, retorna o vetor de indices
+  return indices;
+}
+
+void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset){
+  //o conceito de busca binária é utilizado para retornar uma posição válida em que o registro pode ser inserido
+  int pos = buscaBinariaVetorIndice(indices, tamanhoVetor, idPessoa);
+  
+  int i = tamanhoVetor;
+  for (i; i > pos; i--)
+  {
+    indices[i] = indices[i-1];
+  }
+  indices[pos].idPessoa = idPessoa;
+  indices[pos].byteoffset = byteoffset;
+  //feito isso, o vetor está atualizado e 100% pronto para voltar para memória secundária
+}
+
+// Retorna a posição onde o idPessoa deve ser inserido para manter o vetor ordenado. Se o idPessoa já existir, retorna -1
+int buscaBinariaVetorIndice(noIndice* indices, int tamanho, int idPessoa) {
+    int inicio = 0;
+    int fim = tamanho - 1;
+    
+    // Caso especial: vetor vazio
+    if (tamanho == 0) {
+        return 0;
+    }
+    
+    // Caso especial: inserir no início
+    if (idPessoa < indices[0].idPessoa) {
+        return 0;
+    }
+    
+    // Caso especial: inserir no final
+    if (idPessoa > indices[fim].idPessoa) {
+        return tamanho;
+    }
+    
+    // Busca binária
+    while (inicio <= fim) {
+        int meio = inicio + (fim - inicio) / 2;
+        
+        if (indices[meio].idPessoa == idPessoa) {
+            // ID já existe! Retorna -1 para indicar erro
+            return -1;
+        }
+        else if (indices[meio].idPessoa < idPessoa) {
+            inicio = meio + 1;
+        }
+        else {
+            fim = meio - 1;
+        }
+    }
+    
+    // A posição de inserção é retornada
+    return inicio;
+}
+
+void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
+  //o indice será todo reescrito em memória secundária, como aqui estamos escrevendo um registro a mais, o tamanho do arquivo anterior pouco nos importa
+  //o status já está definido como inconsistente, agora só nos resta pular o cabeçalho e reescrever tudo
+  fseek(nomeArquivoIndice, 12, SEEK_SET);
+  for(int i = 0; i < tamanho; i++){
+    fwrite(&indices[i].idPessoa, 1, sizeof(int), nomeArquivoIndice);
+    fwrite(&indices[i].byteoffset, 1, sizeof(int), nomeArquivoIndice);
+  }
+  //depois de escrever tudo:
+  return;
+}
+
+
+
+
+
+
+char *removeEspacosEmBranco(char *campo){
+  // Remove espaços do início
+  while (*campo && isspace((unsigned char)*campo)) {
+    campo++;
+  }
+  // Remove espaços do final
+  int len = strlen(campo);
+  while (len > 0 && isspace((unsigned char)campo[len - 1])) {
+    campo[--len] = '\0';
+  }
+  return campo;
+}
+
+char *removerAspas(char *campo){
+  campo[0] = ' '; //remove as aspas do começo
+  //lê tamanho da string
+  int tam = strlen(campo);
+  campo[tam-1] = '\0'; //remove as aspas do final e troca por /0 que é o terminador da string
+  //vai ficar um espaço em branco no começo
+  campo = removeEspacosEmBranco(campo);
+  return campo;
+}
