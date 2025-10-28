@@ -375,7 +375,7 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
 
     fclose(arqDados);
     fclose(arqIndice);
-
-    binarioNaTela(nomeArquivoIndice);
+    
     binarioNaTela(nomeArquivoPessoa);
+    binarioNaTela(nomeArquivoIndice);
 }

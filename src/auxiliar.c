@@ -446,9 +446,9 @@ noRegistroUnico* lerEntradaInsercaoUnica(){
   parametro = strtok(NULL, ",");
   char *nomePessoa = removeEspacosEmBranco(parametro);
   if(strcmp(nomePessoa, "NULO") == 0){
-    strcpy(regUnico->nomePessoa, "NULO");  // ✅ COPIA para a memória alocada
+    strcpy(regUnico->nomePessoa, "NULO");
   } else{
-    strcpy(regUnico->nomePessoa, removerAspas(nomePessoa));  // ✅ COPIA
+    strcpy(regUnico->nomePessoa, removerAspas(nomePessoa));
   }
   //lendo idade
   parametro = strtok(NULL, ",");
@@ -461,7 +461,7 @@ noRegistroUnico* lerEntradaInsercaoUnica(){
   //lendo nome de usuário
   parametro = strtok(NULL, ",");
   char *nomeUsuario = removeEspacosEmBranco(parametro);
-  regUnico->nomeUsuario = removerAspas(nomeUsuario);
+  strcpy(regUnico->nomeUsuario, removerAspas(nomeUsuario));
 
   //printa registro único para ver se ta lendo certo:
   //printf("\nID: %d\nNome Pessoa: %s\nIdade pessoa: %d\nNome Usuário: %s\n", regUnico->idPessoa, regUnico->nomePessoa, regUnico->idadePessoa, regUnico->nomeUsuario);
