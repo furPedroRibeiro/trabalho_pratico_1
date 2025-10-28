@@ -348,16 +348,15 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
         //depois da entrada ser captada, devemos fazer a inserção no arquivo de dados pessoa
         insereRegistroUnicoPessoa(arqDados, regUnico, cabecalhoAtual);
         //é necessário também inserir no vetor de índices o novo registro
-        insereRegistroUnicoVetorIndice(indices, (cabecalhoAtual->quantidadePessoas)+1, regUnico->idPessoa, cabecalhoAtual->proxByteoffset, nAtual);
+        insereRegistroUnicoVetorIndice(indices, numRegAtivos + i, regUnico->idPessoa, cabecalhoAtual->proxByteoffset);
         //desalocando cabecalho atual para que ele seja lido de novo no começo do while
         free(cabecalhoAtual);
         free(regUnico->nomePessoa);
         free(regUnico->nomeUsuario);
         free(regUnico);
         i++;
-        nAtual--;
     }
-    puts("\nsaiu do loop\n");
+    //puts("\nsaiu do loop\n");
     //essa função armazena novamente o arquivo de índice, agora atualizado
     insereIndice(indices, arqIndice, cabecalho->quantidadePessoas + n);
     //depois de toda a funcionalidade ser executada, basta voltar o status consistente para os 2 arquivos e desalocar o que foi usado de memória, além de fechar os 2 arquivos

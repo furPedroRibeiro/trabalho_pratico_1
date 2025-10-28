@@ -445,7 +445,11 @@ noRegistroUnico* lerEntradaInsercaoUnica(){
   //lendo nome da pessoa
   parametro = strtok(NULL, ",");
   char *nomePessoa = removeEspacosEmBranco(parametro);
-  regUnico->nomePessoa = removerAspas(nomePessoa);
+  if(strcmp(nomePessoa, "NULO") == 0){
+    strcpy(regUnico->nomePessoa, "NULO");  // ✅ COPIA para a memória alocada
+  } else{
+    strcpy(regUnico->nomePessoa, removerAspas(nomePessoa));  // ✅ COPIA
+  }
   //lendo idade
   parametro = strtok(NULL, ",");
   char *idadePessoa = removeEspacosEmBranco(parametro);
@@ -460,7 +464,7 @@ noRegistroUnico* lerEntradaInsercaoUnica(){
   regUnico->nomeUsuario = removerAspas(nomeUsuario);
 
   //printa registro único para ver se ta lendo certo:
-  printf("\nID: %d\nNome Pessoa: %s\nIdade pessoa: %d\nNome Usuário: %s\n", regUnico->idPessoa, regUnico->nomePessoa, regUnico->idadePessoa, regUnico->nomeUsuario);
+  //printf("\nID: %d\nNome Pessoa: %s\nIdade pessoa: %d\nNome Usuário: %s\n", regUnico->idPessoa, regUnico->nomePessoa, regUnico->idadePessoa, regUnico->nomeUsuario);
 
   return regUnico;
 }
@@ -514,12 +518,12 @@ noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n){
   return indices;
 }
 
-void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset, int n){
+void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset){
   //o conceito de busca binária é utilizado para retornar uma posição válida em que o registro pode ser inserido
   int pos = buscaBinariaVetorIndice(indices, tamanhoVetor, idPessoa);
   
   //desloca tudo até a posição
-  for (int i = (tamanhoVetor-n+1); i > pos; i--){
+  for (int i = tamanhoVetor; i > pos; i--){
     indices[i] = indices[i-1];
   }
   indices[pos].idPessoa = idPessoa;

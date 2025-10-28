@@ -7,7 +7,7 @@
 4 pessoas4.bin indice4.bin 1
 1 idPessoa=96
 
-6 pessoas.bin indice.bin 3
+6 pessoas.bin indice.bin 2
 1 625, "SAMANTHA PEREIRA SANTOS", 13, "SAMANTHAPS"
 2 645, "VITORIA PRADO CAMPOS", NULO, "VIVICA"
 3 646, NULO, 19, "THAAAISSL"
