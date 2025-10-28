@@ -18,4 +18,6 @@ run:
 
 clean:
 		rm $(OBJ)/*
+		rm ./*.exe
+cleanbin:
 		rm ./*.bin

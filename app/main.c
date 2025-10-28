@@ -90,9 +90,9 @@ int main(){
       nomeArquivoIndicePessoa = strtok(NULL, " ");
       //obtém n que diz quantas vezes a inserção vai acontecer
       char *numLoop = strtok(NULL, " ");
-      int n = atoi(numLoop);
+      int m = atoi(numLoop);
       //chama funcionalidade 6:
-      inserirUnicoRegistro(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, n);
+      inserirUnicoRegistro(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, m);
       break;
     case 7:
       break;

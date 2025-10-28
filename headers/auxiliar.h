@@ -93,7 +93,7 @@ cabecalhoPessoa* lerCabecalho(FILE *nomeArquivo);
 noRegistroUnico* lerEntradaInsercaoUnica();
 void insereRegistroUnicoPessoa(FILE *nomeArquivoPessoa, noRegistroUnico* regUnico, cabecalhoPessoa* cabecalho);
 noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n);
-void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset);
+void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset, int n);
 void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho);
 
 //funções de uso geral

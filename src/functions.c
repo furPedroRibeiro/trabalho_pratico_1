@@ -339,6 +339,7 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
     //devemos captar agora n entradas do usuário, e a cada entrada é feita uma inserção no arquivo de dados pessoa
     //um while é usado
     int i = 0;
+    int nAtual = n;
     while(i < n){
         //é necessário ler o cabeçalho do arquivo para utilizar as informações contidas nele 
         cabecalhoPessoa* cabecalhoAtual = lerCabecalho(arqDados);
@@ -347,14 +348,16 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
         //depois da entrada ser captada, devemos fazer a inserção no arquivo de dados pessoa
         insereRegistroUnicoPessoa(arqDados, regUnico, cabecalhoAtual);
         //é necessário também inserir no vetor de índices o novo registro
-        insereRegistroUnicoVetorIndice(indices, (cabecalhoAtual->quantidadePessoas)+1, regUnico->idPessoa, cabecalhoAtual->proxByteoffset);
+        insereRegistroUnicoVetorIndice(indices, (cabecalhoAtual->quantidadePessoas)+1, regUnico->idPessoa, cabecalhoAtual->proxByteoffset, nAtual);
         //desalocando cabecalho atual para que ele seja lido de novo no começo do while
         free(cabecalhoAtual);
         free(regUnico->nomePessoa);
         free(regUnico->nomeUsuario);
         free(regUnico);
         i++;
+        nAtual--;
     }
+    puts("\nsaiu do loop\n");
     //essa função armazena novamente o arquivo de índice, agora atualizado
     insereIndice(indices, arqIndice, cabecalho->quantidadePessoas + n);
     //depois de toda a funcionalidade ser executada, basta voltar o status consistente para os 2 arquivos e desalocar o que foi usado de memória, além de fechar os 2 arquivos
@@ -371,9 +374,9 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
     fwrite(&statusConsistente, 1, sizeof(char), arqIndice);
     fseek(arqIndice, 0, SEEK_SET);
 
-    binarioNaTela(arqDados);
-    binarioNaTela(arqIndice);
-
     fclose(arqDados);
     fclose(arqIndice);
+
+    binarioNaTela(nomeArquivoIndice);
+    binarioNaTela(nomeArquivoPessoa);
 }
