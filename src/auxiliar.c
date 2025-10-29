@@ -449,11 +449,6 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice2 *vetorIndice, i
       }
     }
   }
-
-  //libera memória auxiliar e fecha o arquivo
-  free(vetorIndice);
-  fclose(arqPessoa);
-  
   return raizListaResultados;
 }
 

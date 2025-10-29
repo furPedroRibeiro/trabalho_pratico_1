@@ -194,16 +194,18 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //leitura do status dos arquivos
     char statusPessoa, statusIndice;
     //Leitura do status do arquivo pessoa
-    if (fread(&statusPessoa, sizeof(statusPessoa), 1, arqPessoa) != 1){
+    if(fread(&statusPessoa, sizeof(statusPessoa), 1, arqPessoa) != 1 || statusPessoa != '1'){
         // Se o status for diferente de 1 o arquivo de dados está inconsistente
         puts("Falha no processamento do arquivo");
         fclose(arqPessoa);
+        fclose(arquivoIndice);
         return;
     }
     //leitura do status do arquivo de indice
-    if (fread(&statusIndice, sizeof(statusIndice), 1, arquivoIndice) != 1){
+    if(fread(&statusIndice, sizeof(statusIndice), 1, arquivoIndice) != 1 || statusIndice != '1'){
         // Se o status for diferente de 1 o arquivo de dados está inconsistente
         puts("Falha no processamento do arquivo");
+        fclose(arqPessoa);
         fclose(arquivoIndice);
         return;
     }
@@ -246,7 +248,7 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         //executa a busca e obtém a lista de resultados
         resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, qtdIndice, sizeDados, nomeCampo, valorCampo);
         //nenhum registro encontrado
-        if (resultados = NULL) {
+        if (resultados == NULL) {
             printf("Registro inexistente.\n\n");
         } 
         // Imprime todos os registros encontrados
