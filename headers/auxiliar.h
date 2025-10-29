@@ -42,6 +42,18 @@ typedef struct indice2{
   int64_t byteOffset;
 } indice2;
 
+//estrutura de dados do tipo lista duplamente encadeada para armazenar os campos encontrados na busca
+typedef struct resultadoBusca{
+  int idPessoa;
+  int idadePessoa;
+  int tamNomePessoa;
+  char nomePessoa[100];
+  int tamNomeUsuario;
+  char nomeUsuario[100];
+  int64_t byteOffset;
+  struct resultadoBusca *proxResultado;
+} resultadoBusca;
+
 //define as variáveis para raíz da lista 1 e da lista 2
 extern registro* raizListaPessoas;
 extern indice* raizListaIndice;
@@ -65,6 +77,10 @@ void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *no
 int64_t buscaBinariaIndice(indice2 *vetor, int tamanho, int idBuscado);
 void imprimirRegistroPorByteOffset(FILE *arqPessoa, int64_t byteOffset, struct registro_2 reg);
 
+//para a função 4, busca
+resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice2 *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo);
+void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, struct registro_2 *reg, int64_t byteOffset);
+void liberarListaResultados(resultadoBusca *raizLista);
 
 //funções para a funcionalidade 6
 

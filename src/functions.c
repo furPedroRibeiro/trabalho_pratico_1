@@ -236,7 +236,6 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     for(int i = 0; i < n; i++){
         int entrada;
         char nomeCampo[100], valorCampo[100];
-        int find = 0;
 
         //le a linha de busca no formato: número nomeCampo=valorCampo
         scanf("%d", &entrada);
@@ -244,62 +243,65 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         getchar();
         scan_quote_string(valorCampo);
 
-        //caso 1:busca por idPessoa usando indice
-        if(strcmp(nomeCampo, "idPessoa") == 0){
-            int idBusca = atoi(valorCampo);
-            int64_t offset = buscaBinariaIndice(vetorIndice, qtdIndice, idBusca);
-            if(offset != -1){
-                imprimirRegistroPorByteOffset(arqPessoa, offset, reg);
-                find = 1;
-            }
+        //executa a busca e obtém a lista de resultados
+        resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, qtdIndice, sizeDados, nomeCampo, valorCampo);
+        //nenhum registro encontrado
+        if (resultados = NULL) {
+            printf("Registro inexistente.\n\n");
         } 
-        //caso 2:busca sequencial por outros campos
-        else {
-
-            fseek(arqPessoa, 17, SEEK_SET); // pula o cabeçalho
-
-            while(ftell(arqPessoa) < sizeDados){
-                char removido;
-                fread(&removido, sizeof(char), 1, arqPessoa);
-                
-                int tamRegistro;
-                fread(&tamRegistro, sizeof(int), 1, arqPessoa);
-                
-                //pula os registros removidos
-                if(removido == '1'){
-                    fseek(arqPessoa, tamRegistro, SEEK_CUR);
-                    continue;
-                }
-
-                //leitura dos campos do registro
-                fread(&reg.idPessoa, sizeof(int), 1, arqPessoa);
-                fread(&reg.idadePessoa, sizeof(int), 1, arqPessoa);
-                fread(&reg.tamNomePessoa, sizeof(int), 1, arqPessoa);
-                if(reg.tamNomePessoa > 0){
-                    fread(reg.nomePessoa, sizeof(char), reg.tamNomePessoa, arqPessoa);
-                    reg.nomePessoa[reg.tamNomePessoa] = '\0';
-                } else {
-                    reg.nomePessoa[0] = '\0';
-                }
-                fread(&reg.tamNomeUsuario, sizeof(int), 1, arqPessoa);
-                fread(reg.nomeUsuario, sizeof(char), reg.tamNomeUsuario, arqPessoa);
-                reg.nomeUsuario[reg.tamNomeUsuario] = '\0';
-
-                if ((strcmp(nomeCampo, "idadePessoa") == 0 && reg.idadePessoa == atoi(valorCampo)) ||
-                    (strcmp(nomeCampo, "nomePessoa") == 0 && strcmp(reg.nomePessoa, valorCampo) == 0) ||
-                    (strcmp(nomeCampo, "nomeUsuario") == 0 && strcmp(reg.nomeUsuario, valorCampo) == 0)) {
-                    imprimirRegistro(reg.idPessoa, reg.idadePessoa, reg.tamNomePessoa, reg.nomePessoa, reg.tamNomeUsuario, reg.nomeUsuario);
-                    find = 1;
-            }
+        // Imprime todos os registros encontrados
+        else{
+            resultadoBusca *atual = resultados;
+            while(atual != NULL){
+                imprimirRegistro(atual->idPessoa, atual->idadePessoa, atual->tamNomePessoa, atual->nomePessoa, atual->tamNomeUsuario, atual->nomeUsuario);
+                atual = atual->proxResultado;
             }
         }
-        if(find == 0){
-        printf("Registro inexistente.\n\n");
-        }
+        //libera memória da lista
+        liberarListaResultados(resultados);
     }
-
     free(vetorIndice);
     fclose(arqPessoa);
+}
+
+
+//FUNCIONALIDADE 5
+
+void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
+    //abertura dos arquivos para leitura e escrita
+    char caminho[100] = "./";
+    strcat(caminho, nomeArquivoPessoa);
+    FILE *arqPessoa = fopen(caminho, "rb+");
+
+    char caminho_2[100] = "./";
+    strcat(caminho_2, nomeArquivoIndice);
+    FILE *arquivoIndice = fopen(caminho_2, "rb+");
+
+    if(arqPessoa == NULL || arquivoIndice == NULL){
+        puts("Falha no processamento do arquivo.");
+        return;
+    }
+
+    //leitura do status dos arquivos
+    char statusPessoa, statusIndice;
+    //Leitura do status do arquivo pessoa
+    if (fread(&statusPessoa, sizeof(statusPessoa), 1, arqPessoa) != 1){
+        // Se o status for diferente de 1 o arquivo de dados está inconsistente
+        puts("Falha no processamento do arquivo");
+        fclose(arqPessoa);
+        return;
+    }
+    //leitura do status do arquivo de indice
+    if (fread(&statusIndice, sizeof(statusIndice), 1, arquivoIndice) != 1){
+        // Se o status for diferente de 1 o arquivo de dados está inconsistente
+        puts("Falha no processamento do arquivo");
+        fclose(arquivoIndice);
+        return;
+    }
+    //definindo status como inconsistente:
+    char statusInconsistente = '0';
+    fseek(arqPessoa, 0, SEEK_SET);
+    fwrite(&statusInconsistente, 1, sizeof(char), arqPessoa);
 }
 
 

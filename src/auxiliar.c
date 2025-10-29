@@ -320,30 +320,141 @@ char* meu_strsep(char** buffer, const char* delim) {
 
 
 
-
 //funções para as funcionalidades 3 e 4
 
 // Funcao auxiliar para imprimir um registro
 void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario){
-    printf("Dados da pessoa de codigo %d\n", idPessoa);
+  printf("Dados da pessoa de codigo %d\n", idPessoa);
+  
+  if(tamNomePessoa > 0){
+    printf("Nome: %s\n", nomePessoa);
+  } else{
+    printf("Nome: -\n");
+  }
+  
+  if(idadePessoa == -1){
+    printf("Idade: -\n");
+  } else{
+    printf("Idade: %d\n", idadePessoa);
+  }
+  
+  if(tamNomeUsuario > 0){
+    printf("Usuario: %s\n\n", nomeUsuario);
+  } else{
+    printf("Usuario: -\n\n");
+  }
+}
+
+//função responsavel por adicionar um nó no final da lista de resultados de busca
+void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, struct registro_2 *reg, int64_t byteOffset){
+  resultadoBusca *novoResultado = calloc(1, sizeof(resultadoBusca));
+  
+  //copia os campos do registro encontrado
+  novoResultado->idPessoa = reg->idPessoa;
+  novoResultado->idadePessoa = reg->idadePessoa;
+  novoResultado->tamNomePessoa = reg->tamNomePessoa;
+  strcpy(novoResultado->nomePessoa, reg->nomePessoa);
+  novoResultado->tamNomeUsuario = reg->tamNomeUsuario;
+  strcpy(novoResultado->nomeUsuario, reg->nomeUsuario);
+  novoResultado->byteOffset = byteOffset;
+  novoResultado->proxResultado = NULL;
+  
+  //inserção no final da lista
+  if(*raizLista == NULL){
+    *raizLista = novoResultado;
+    *ultimoResultado = novoResultado;
+  } else{
+    (*ultimoResultado)->proxResultado = novoResultado;
+    *ultimoResultado = novoResultado;
+  }
+}
+
+//libera a memória alocada pela lista de resultados de busca, ela é necessária pois a lista será usada em muitas funcionalidades 
+void liberarListaResultados(resultadoBusca *raizLista){
+  resultadoBusca *atual = raizLista;
+  while (atual != NULL){
+    resultadoBusca *proximo = atual->proxResultado;
+    free(atual);
+    atual = proximo;
+  }
+}
+
+resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice2 *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo){
+  //inicializa a lista de resultados
+  resultadoBusca *raizListaResultados = NULL;
+  resultadoBusca *ultimoResultado = NULL;
+  struct registro_2 reg;
+
+  if(strcmp(nomeCampo, "idPessoa") == 0){
+    int idBusca = atoi(valorCampo);
+    int64_t offset = buscaBinariaIndice(vetorIndice, qtdIndice, idBusca);
     
-    if (tamNomePessoa > 0) {
-        printf("Nome: %s\n", nomePessoa);
-    } else {
-        printf("Nome: -\n");
+    if(offset != -1){
+      fseek(arqPessoa, offset, SEEK_SET);
+      
+      char removido;
+      fread(&removido, sizeof(char), 1, arqPessoa);
+      
+      //adiciona se o registro não estiver removido
+      if(removido == '0'){
+        int tamRegistro;
+        fread(&tamRegistro, sizeof(int), 1, arqPessoa);
+        
+        fread(&reg.idPessoa, sizeof(int), 1, arqPessoa);
+        fread(&reg.idadePessoa, sizeof(int), 1, arqPessoa);
+        fread(&reg.tamNomePessoa, sizeof(int), 1, arqPessoa);
+        fread(reg.nomePessoa, sizeof(char), reg.tamNomePessoa, arqPessoa);
+        reg.nomePessoa[reg.tamNomePessoa] = '\0';
+        fread(&reg.tamNomeUsuario, sizeof(int), 1, arqPessoa);
+        fread(reg.nomeUsuario, sizeof(char), reg.tamNomeUsuario, arqPessoa);
+        reg.nomeUsuario[reg.tamNomeUsuario] = '\0';
+        
+        adicionarResultadoBusca(&raizListaResultados, &ultimoResultado, &reg, offset);
+      }
     }
-    
-    if (idadePessoa == -1) {
-        printf("Idade: -\n");
-    } else {
-        printf("Idade: %d\n", idadePessoa);
+  } else{
+    fseek(arqPessoa, 17, SEEK_SET); //pula o cabeçalho
+    while(ftell(arqPessoa) < sizeDados){
+      int64_t offsetAtual = ftell(arqPessoa);
+      
+      char removido;
+      fread(&removido, sizeof(char), 1, arqPessoa);
+      int tamRegistro;
+      fread(&tamRegistro, sizeof(int), 1, arqPessoa);
+      if (removido == '1') {
+          fseek(arqPessoa, tamRegistro, SEEK_CUR);
+          continue;
+      }
+      //lê os campos do registro
+      fread(&reg.idPessoa, sizeof(int), 1, arqPessoa);
+      fread(&reg.idadePessoa, sizeof(int), 1, arqPessoa);
+      fread(&reg.tamNomePessoa, sizeof(int), 1, arqPessoa);
+      fread(reg.nomePessoa, sizeof(char), reg.tamNomePessoa, arqPessoa);
+      reg.nomePessoa[reg.tamNomePessoa] = '\0';        
+      fread(&reg.tamNomeUsuario, sizeof(int), 1, arqPessoa);
+      fread(reg.nomeUsuario, sizeof(char), reg.tamNomeUsuario, arqPessoa);
+      reg.nomeUsuario[reg.tamNomeUsuario] = '\0';
+      
+      //compara o campo solicitado com o valor buscado
+      int encontrado = 0;
+      if(strcmp(nomeCampo, "idadePessoa") == 0 && reg.idadePessoa == atoi(valorCampo)){
+        encontrado = 1;
+      } else if(strcmp(nomeCampo, "nomePessoa") == 0 && strcmp(reg.nomePessoa, valorCampo) == 0){
+        encontrado = 1;
+      } else if(strcmp(nomeCampo, "nomeUsuario") == 0 && strcmp(reg.nomeUsuario, valorCampo) == 0){
+        encontrado = 1;
+      }
+      if(encontrado){
+        adicionarResultadoBusca(&raizListaResultados, &ultimoResultado, &reg, offsetAtual);
+      }
     }
-    
-    if (tamNomeUsuario > 0) {
-        printf("Usuario: %s\n\n", nomeUsuario);
-    } else {
-        printf("Usuario: -\n\n");
-    }
+  }
+
+  //libera memória auxiliar e fecha o arquivo
+  free(vetorIndice);
+  fclose(arqPessoa);
+  
+  return raizListaResultados;
 }
 
 //busca binaria para encontrar o byteOffset do registro com o id buscado

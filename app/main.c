@@ -79,9 +79,15 @@ int main(){
       int n = atoi(parametro);
       buscarRegistros(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, n);
       break;
-    //caso o usuário digite alguma opção que não é de 1 a 4
     case 5:
-      //
+      //obtem o nome do arquivo de entrada passado como parametro
+      nomeArquivoEntradaPessoa = strtok(NULL, " ");
+      //obtem o nome do arquivo de indice passado como parametro
+      nomeArquivoIndicePessoa = strtok(NULL, " ");
+      //obtem o parametro n
+      parametro = strtok(NULL, " ");
+      int n = atoi(parametro);
+      //deletarRegistro(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, n);
       break;
     case 6:
       //obtém nome do arquivo binário de pessoas gerado anteriormente:
@@ -102,6 +108,7 @@ int main(){
       break;
     case 10:
       break;
+    //caso o usuário digite alguma opção que não é de 1 a 10
     default: 
       printf("Opcao invalida");
   }
