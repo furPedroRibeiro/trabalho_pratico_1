@@ -87,7 +87,7 @@ int main(){
       //obtem o parametro n
       parametro = strtok(NULL, " ");
       int m = atoi(parametro);
-      //deletarRegistro(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, m);
+      deletarRegistro(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, m);
       break;
     case 6:
       //obtém nome do arquivo binário de pessoas gerado anteriormente:
@@ -98,7 +98,7 @@ int main(){
       char *numLoop = strtok(NULL, " ");
       int p = atoi(numLoop);
       //chama funcionalidade 6:
-      inserirUnicoRegistro(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, p);
+      //inserirUnicoRegistro(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, p);
       break;
     case 7:
       break;
