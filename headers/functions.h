@@ -23,4 +23,7 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n);
 //funcionalidade 6
 void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n);
 
+//funcionalidade 8:
+void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue);
+
 #endif

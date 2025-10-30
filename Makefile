@@ -19,5 +19,11 @@ run:
 clean:
 		rm $(OBJ)/*
 		rm ./*.exe
+		
 cleanbin:
 		rm ./*.bin
+
+cleanzip:
+		rm ./*.zip
+
+cleanall: clean cleanbin cleanzip

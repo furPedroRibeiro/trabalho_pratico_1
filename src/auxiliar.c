@@ -296,29 +296,6 @@ void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, int6
   }
 }
 
-char* meu_strsep(char** buffer, const char* delim) {
-    char* inicio = *buffer;
-    char* p;
-    
-    if (inicio == NULL) {
-        return NULL;
-    }
-    
-    p = strpbrk(inicio, delim);
-    
-    if (p) {
-        *p = '\0';
-        *buffer = p + 1;
-    } else {
-        *buffer = NULL;
-    }
-    
-    return inicio;
-}
-
-
-
-
 
 
 //funções para as funcionalidades 3 e 4
@@ -585,8 +562,49 @@ void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
 
 
 
+//FUNÇÕES PARA A FUNCIONALIDADE 8:
+
+void modificaCabecalhoArquivoSegue(FILE *arqSegue, char status, int quantidadeRegistros, int proxByteoffset){
+  //o arquivo já está aberto, é só posicionar o ponteiro e escrever
+  fseek(arqSegue, 0, SEEK_SET);
+
+  fwrite(&status, sizeof(char), 1, arqSegue); //escreve status
+  fwrite(&quantidadeRegistros, sizeof(int), 1, arqSegue); //escreve qtd registros
+  fwrite(&proxByteoffset, sizeof(int), 1, arqSegue); //escreve proxRRN
+}
+
+void insereArquivoSegue(FILE *arqSegue, noSegue *noAtual){
+  //essa função vai apenas fazer os fwrite e não retorna nada
+  fwrite(&noAtual->removido[0], sizeof(char), 1, arqSegue);
+  fwrite(&noAtual->idPessoaQueSegue, sizeof(int), 1, arqSegue);
+  fwrite(&noAtual->idPessoaQueESeguida, sizeof(int), 1, arqSegue);
+  fwrite(noAtual->dataInicioQueSegue, sizeof(char), 10, arqSegue);
+  fwrite(noAtual->dataFimQueSegue, sizeof(char), 10, arqSegue);
+  fwrite(&noAtual->grauAmizade[0], sizeof(char), 1, arqSegue);
+}
 
 
+
+// funções gerais
+char *meu_strsep(char** buffer, const char* delim) {
+    char* inicio = *buffer;
+    char* p;
+    
+    if (inicio == NULL) {
+        return NULL;
+    }
+    
+    p = strpbrk(inicio, delim);
+    
+    if (p) {
+        *p = '\0';
+        *buffer = p + 1;
+    } else {
+        *buffer = NULL;
+    }
+    
+    return inicio;
+}
 
 char *removeEspacosEmBranco(char *campo){
   // Remove espaços do início

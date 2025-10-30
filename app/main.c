@@ -14,6 +14,13 @@ int main(){
   //guarda o ponteiro para o nome de arquivo de saída
   char *nomeArquivoSaidaPessoa;
 
+  //guarda o ponteiro para o nome de arquivo de entrada
+  char *nomeArquivoEntradaSegue;
+  //guarda o ponteiro para o nome de arquivo de índice
+  char *nomeArquivoIndiceSegue;
+  //guarda o ponteiro para o nome de arquivo de saída
+  char *nomeArquivoSaidaSegue;
+
   //primeiro deve-se receber a entrada do usuário para saber a saída desejada e qual função executar
   
   //variável responsável por armazenar o parâmetro inicial no primeiro uso de strtok
@@ -97,6 +104,12 @@ int main(){
     case 7:
       break;
     case 8:
+      //obtém nome do arquivo de entrada(csv)
+      nomeArquivoEntradaSegue = strtok(NULL, " ");
+      //obtém nome do arquivo de saída(bin)
+      nomeArquivoSaidaSegue = strtok(NULL, " ");
+      //chama funcionalidade 8:
+      criaArquivoSegue(nomeArquivoEntradaSegue, nomeArquivoSaidaSegue);
       break;
     case 9:
       break;

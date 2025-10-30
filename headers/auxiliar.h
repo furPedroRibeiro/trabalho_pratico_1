@@ -96,6 +96,23 @@ noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n);
 void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset);
 void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho);
 
+//funções para funcionalidade 8:
+
+//estrutura nó para um registro de segue:
+
+typedef struct noSegue{
+  char removido[2];
+  int idPessoaQueSegue;
+  int idPessoaQueESeguida;
+  char *dataInicioQueSegue;
+  char *dataFimQueSegue;
+  char grauAmizade[2];
+} noSegue;
+
+void modificaCabecalhoArquivoSegue(FILE *arqSegue, char status, int quantidadeRegistros, int proxByteoffset);
+
+void insereArquivoSegue(FILE *arqSegue, noSegue *noAtual);
+
 //funções de uso geral
 int buscaBinariaVetorIndice(noIndice* indices, int tamanho, int idPessoa);
 char *removeEspacosEmBranco(char *campo);
