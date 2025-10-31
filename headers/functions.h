@@ -26,4 +26,7 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
 //funcionalidade 8:
 void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue);
 
+//funcionalidade 9:
+void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado);
+
 #endif

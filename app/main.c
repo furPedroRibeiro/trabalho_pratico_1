@@ -16,10 +16,10 @@ int main(){
 
   //guarda o ponteiro para o nome de arquivo de entrada
   char *nomeArquivoEntradaSegue;
-  //guarda o ponteiro para o nome de arquivo de índice
-  char *nomeArquivoIndiceSegue;
   //guarda o ponteiro para o nome de arquivo de saída
   char *nomeArquivoSaidaSegue;
+  //guarda o nome do arquivo ordenado de segue
+  char *nomeArquivoOrdenadoSegue;
 
   //primeiro deve-se receber a entrada do usuário para saber a saída desejada e qual função executar
   
@@ -112,6 +112,12 @@ int main(){
       criaArquivoSegue(nomeArquivoEntradaSegue, nomeArquivoSaidaSegue);
       break;
     case 9:
+      //obtém nome do arquivo desordenado
+      nomeArquivoEntradaSegue = strtok(NULL, " ");
+      //obtém nome do arquivo ordenado
+      nomeArquivoOrdenadoSegue = strtok(NULL, " ");
+      //chama func 9
+      ordenaArquivoSegue(nomeArquivoEntradaSegue, nomeArquivoOrdenadoSegue);
       break;
     case 10:
       break;

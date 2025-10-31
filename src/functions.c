@@ -529,3 +529,95 @@ void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue
 }
 
 
+
+//FUNÇÕES PARA FUNCIONALIDADE 9:
+
+void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado){
+    //primeiro é necessário trazer o arquivo todo para memória primária
+    //abre o arquivo desordenado:
+    FILE *arqDesordenado = fopen(nomeArquivoDesordenado, "rb+");
+    if(arqDesordenado == NULL){
+        puts("Falha no processamento do arquivo.");
+        free(arqDesordenado);
+        return;
+    }
+    //escreve o status pra 0
+    char statusInconsistente = '0';
+    fseek(arqDesordenado, 0, SEEK_SET);
+    fwrite(&statusInconsistente, sizeof(char), 1, arqDesordenado);
+
+    //lê a quantidade de registros para alocar um vetor com o tamanho certo
+    int qtdRegistros;
+    fseek(arqDesordenado, 1, SEEK_SET);
+    fread(&qtdRegistros, sizeof(int), 1, arqDesordenado);
+
+    //debug ->printa se leu a quantidade de registros certa:
+    // printf("Qtd registros lido: %d\n", qtdRegistros);
+    
+    //será criado um vetor da estrutura de dados do tipo noSegue
+    noSegue *registros = (noSegue*)calloc(qtdRegistros, sizeof(noSegue));
+    
+    //o nó tem essa estrutura:
+    // char removido[2];
+    // int idPessoaQueSegue;
+    // int idPessoaQueESeguida;
+    // char *dataInicioQueSegue;
+    // char *dataFimQueSegue;
+    // char grauAmizade[2];
+
+    //loop para ler todos os registros do arquivo segue
+
+    fseek(arqDesordenado, 9, SEEK_SET); // coloca o byteoffset no primeiro registro
+    for(int i = 0; i < qtdRegistros; i++){
+        registros[i].dataInicioQueSegue = malloc(11 * sizeof(char));
+        registros[i].dataFimQueSegue = malloc(11 * sizeof(char));
+
+        fread(registros[i].removido, sizeof(char), 1, arqDesordenado);
+        fread(&registros[i].idPessoaQueSegue, sizeof(int), 1, arqDesordenado);
+        fread(&registros[i].idPessoaQueESeguida, sizeof(int), 1, arqDesordenado);
+        fread(registros[i].dataInicioQueSegue, sizeof(char), 10, arqDesordenado);
+        registros[i].dataInicioQueSegue[10] = '\0';
+        fread(registros[i].dataFimQueSegue, sizeof(char), 10, arqDesordenado);
+        registros[i].dataFimQueSegue[10] = '\0';
+        fread(registros[i].grauAmizade, sizeof(char), 1, arqDesordenado);
+    
+        // //printa um nó para ver se deu certo:
+        // printf("\nRemovido: '%c'", registros[i].removido[0]);
+        // printf("\nId pessoa que segue: %d", registros[i].idPessoaQueSegue);
+        // printf("\nId pessoa que e seguida: %d", registros[i].idPessoaQueESeguida);
+        // printf("\nData inicio que segue: '%s'", registros[i].dataInicioQueSegue);
+        // printf("\nData fim que segue: '%s'", registros[i].dataFimQueSegue);
+        // printf("\nRemovido: '%c'", registros[i].grauAmizade[0]);
+    }
+
+    //depois de tudo lido, é preciso que a ordenação seja feita para que seja escrito tudo no arquivo de novo
+    qsort(registros, qtdRegistros, sizeof(noSegue), comparaParaOrdenar);
+
+    //abre arquivo segue ordenado para escrita:
+    FILE *arqOrdenado = fopen(nomeArquivoOrdenado, "wb+");
+    if(arqOrdenado == NULL){
+        puts("Falha no processamento do arquivo.");
+        free(arqOrdenado);
+        return;
+    }
+    escreveSegueOrdenado(arqOrdenado, qtdRegistros, registros);//função que escreve tudo no arquivo de dados
+
+    //atualiza status
+    fseek(arqOrdenado, 0, SEEK_SET);
+    char statusConsistente = '1';
+    fwrite(&statusConsistente, sizeof(char), 1, arqOrdenado);
+
+    //fecha arquivos e mostra binário na tela:
+    fclose(arqDesordenado); //fecha arquivo desordenado
+    fclose(arqOrdenado); //fecha arquivo ordenado
+    binarioNaTela(nomeArquivoOrdenado);
+
+
+    //desalocando memória usada para os nós
+    for (int i = 0; i < qtdRegistros; i++)
+    {
+        free(registros[i].dataInicioQueSegue);
+        free(registros[i].dataFimQueSegue);
+    }
+    free(registros);
+}

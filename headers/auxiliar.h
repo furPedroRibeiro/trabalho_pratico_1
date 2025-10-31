@@ -110,8 +110,11 @@ typedef struct noSegue{
 } noSegue;
 
 void modificaCabecalhoArquivoSegue(FILE *arqSegue, char status, int quantidadeRegistros, int proxByteoffset);
-
 void insereArquivoSegue(FILE *arqSegue, noSegue *noAtual);
+int comparaParaOrdenar(const void *a, const void *b);
+void escreveSegueOrdenado(FILE *arqOrdenado, int sizeArray, noSegue *registros);
+
+
 
 //funções de uso geral
 int buscaBinariaVetorIndice(noIndice* indices, int tamanho, int idPessoa);

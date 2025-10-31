@@ -15,6 +15,9 @@
 8 segue.csv arquivoSaida.bin
 8 naoExiste.csv arquivoSaida.bin
 
+9 arquivoSaida.bin segueOrdenado.bin
+
+
 no trabalho prático 1:
 
 Observações sobre o trabalho: nas funcionalidades 5, 7 e 10 é necessário usar a funcionalidade 4, eu não sei se é pra usar a mesma lógica ou se é literal pra usar a mesma função, da pra perguntar pra algum monitor. Dito isso, eu acho melhor modularizar mais a funcionalidade 4, já que vai precisar usar ela em algumas outras funcionalidades, modularizar que eu digo, se atribui ao fato de que a busca deve ser feita assim:

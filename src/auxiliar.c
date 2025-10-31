@@ -583,6 +583,67 @@ void insereArquivoSegue(FILE *arqSegue, noSegue *noAtual){
   fwrite(&noAtual->grauAmizade[0], sizeof(char), 1, arqSegue);
 }
 
+int comparaParaOrdenar(const void *a, const void *b){
+  const noSegue *noA = (const noSegue*)a;
+  const noSegue *noB = (const noSegue*)b;
+
+  if(noA->idPessoaQueSegue == noB->idPessoaQueSegue){
+    if(noA->idPessoaQueESeguida != noB->idPessoaQueESeguida){
+      return noA->idPessoaQueESeguida - noB->idPessoaQueESeguida;
+    } else{
+      if(strcmp(noA->dataInicioQueSegue, noB->dataInicioQueSegue) != 0){
+        return strcmp(noA->dataInicioQueSegue, noB->dataInicioQueSegue);
+      } else{
+        if(strcmp(noA->dataFimQueSegue, "$$$$$$$$$$") == 0 && strcmp(noB->dataFimQueSegue, "$$$$$$$$$$") == 0){
+          return 0; //campos são iguais
+        } else if(strcmp(noA->dataFimQueSegue, "$$$$$$$$$$") == 0){
+          return 1; //A deve ir depois de B
+        } else if(strcmp(noB->dataFimQueSegue, "$$$$$$$$$$") == 0){
+          return -1; //A deve ir antes de B
+        }
+        return strcmp(noA->dataFimQueSegue, noB->dataFimQueSegue);
+      }
+    }
+  }
+
+  return noA->idPessoaQueSegue - noB->idPessoaQueSegue;
+}
+
+void escreveSegueOrdenado(FILE *arqOrdenado, int sizeArray, noSegue *registros){
+  fseek(arqOrdenado, 0, SEEK_SET); // garante que o ponteiro de escrita em no byte 0
+
+  //inicializa variáveis do cabeçalho
+  char statusInconsistente = '0';
+  int qtdRegistros = 0;
+  int proxRRN = 0;
+  //escreve cabeçalho
+  fwrite(&statusInconsistente, sizeof(char), 1, arqOrdenado);
+  fwrite(&qtdRegistros, sizeof(int), 1, arqOrdenado);
+  fwrite(&proxRRN, sizeof(int), 1, arqOrdenado);
+
+  int64_t byteoffset = 9; //pula o cabeçalho
+
+  for(int i = 0; i < sizeArray; i++){
+    fseek(arqOrdenado, byteoffset, SEEK_SET);
+    fwrite(registros[i].removido, sizeof(char), 1, arqOrdenado);
+    fwrite(&registros[i].idPessoaQueSegue, sizeof(int), 1, arqOrdenado);
+    fwrite(&registros[i].idPessoaQueESeguida, sizeof(int), 1, arqOrdenado);
+    fwrite(registros[i].dataInicioQueSegue, sizeof(char), 10, arqOrdenado);
+    registros[i].dataInicioQueSegue[10] = '\0';
+    fwrite(registros[i].dataFimQueSegue, sizeof(char), 10, arqOrdenado);
+    registros[i].dataFimQueSegue[10] = '\0';
+    fwrite(registros[i].grauAmizade, sizeof(char), 1, arqOrdenado);
+  
+    byteoffset = byteoffset + 30;
+    proxRRN++;
+    qtdRegistros++;
+
+    //escreve as informações no cabeçalho
+    fseek(arqOrdenado, 1, SEEK_SET);
+    fwrite(&qtdRegistros, sizeof(int), 1, arqOrdenado);
+    fwrite(&proxRRN, sizeof(int), 1, arqOrdenado);
+  }
+}
 
 
 // funções gerais
