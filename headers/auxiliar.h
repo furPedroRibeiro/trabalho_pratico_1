@@ -96,10 +96,10 @@ noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n);
 void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset);
 void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho);
 
+
 //funções para funcionalidade 8:
 
 //estrutura nó para um registro de segue:
-
 typedef struct noSegue{
   char removido[2];
   int idPessoaQueSegue;
@@ -109,17 +109,21 @@ typedef struct noSegue{
   char grauAmizade[2];
 } noSegue;
 
-void modificaCabecalhoArquivoSegue(FILE *arqSegue, char status, int quantidadeRegistros, int proxByteoffset);
+void criaCabecalhoArquivoSegue(FILE *arqSegue, char status, int quantidadeRegistros, int proxByteoffset);
 void insereArquivoSegue(FILE *arqSegue, noSegue *noAtual);
+
+
+//funções para funcionalidade 9:
+
 int comparaParaOrdenar(const void *a, const void *b);
 void escreveSegueOrdenado(FILE *arqOrdenado, int sizeArray, noSegue *registros);
-
 
 
 //funções de uso geral
 int buscaBinariaVetorIndice(noIndice* indices, int tamanho, int idPessoa);
 char *removeEspacosEmBranco(char *campo);
 char *removerAspas(char *campo);
+void defineStatusArquivo(FILE *arquivo, char status);
 //função strsep aqui(não roda em windows a função strsep definida direto pelo GNU(se não me engano))
 char* meu_strsep(char** , const char* delim);
 

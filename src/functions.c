@@ -14,8 +14,6 @@ void criarIndice(char *nomeArquivoIndice){
   //concatena o caminho com o nome do arquivo
   strcat(caminho, nomeArquivoIndice);
   //o que deve ser feito aqui é a abertura(criação) do arquivo de índice, que nesse momento deve conter apenas o cabeçalho
-  //o arquivo em sua criação, tem status e ele está consistente
-  char status = '1'; 
   //devemos adicionar o lixo ao cabeçalho também
   char lixo[] = "$$$$$$$$$$$";
 
@@ -25,8 +23,10 @@ void criarIndice(char *nomeArquivoIndice){
     printf("Falha no processamento do arquivo.");
     return;
   }
+  //o arquivo em sua criação, tem status e ele está consistente
+  defineStatusArquivo(arqIndice, '1');
   //escreve o cabeçalho no arquivo
-  fwrite(&status, sizeof(char), 1, arqIndice);
+  fseek(arqIndice, 1, SEEK_SET); //pula o status
   fwrite(lixo, sizeof(char), strlen(lixo), arqIndice);
 
   //fecha o arquivo
@@ -37,86 +37,82 @@ void criarIndice(char *nomeArquivoIndice){
 }
 
 
-
 //FUNCIONALIDADE 2:
-
 void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoDados, char *nomeArquivoIndice){
-  //testando existência dos arquivos:
-  //arquivo de dados será criado aqui
-  char caminho[100] = "./";
-  strcat(caminho, nomeArquivoDados);
-  //cria e abre arquivo pra escrita
-  FILE* arqDados = fopen(caminho, "wb");
-  if(arqDados == NULL){
-    puts("Falha no processamento do arquivo.");
-    return;
-  } else{
-    
-  }
-  //primeiro já vamos reescrever o status para 0
-  char statusInconsistente = '0';
-  fseek(arqDados, 0, SEEK_SET);
-  fwrite(&statusInconsistente, sizeof(char), 1, arqDados);
+    //testando existência dos arquivos:
+    //arquivo de dados será criado aqui
+    char caminho[100] = "./";
+    strcat(caminho, nomeArquivoDados);
+    //cria e abre arquivo pra escrita
+    FILE* arqDados = fopen(caminho, "wb");
+    if(arqDados == NULL){
+        puts("Falha no processamento do arquivo.");
+        return;
+    } else{
+        
+    }
+    //primeiro já vamos escrever o status para 0
+    defineStatusArquivo(arqDados, '0');
 
-  //agora testando se o arquivo de índice existe:
-  char caminho_1[100] = "./";
-  strcat(caminho_1, nomeArquivoIndice);
-  //abre arquivo pra escrita permitindo fopen
-  FILE* arqIndice = fopen(caminho_1, "rb+");
-  if(arqIndice == NULL){
-    puts("Falha no processamento do arquivo.");
-    return;
-  } else{
-    
-  }
-  //testando se csv existe
-  char caminho_2[] = "./";
-  strcat(caminho_2, nomeArquivoEntrada);
-  FILE *arqEntrada = fopen(caminho_2, "r");
-  //se der erro no processamento do arquivo, aparece a seguinte mensagem:
-  if(arqEntrada == NULL){
-    puts("Falha no processamento do arquivo.");
-    return;
-  } else{
-    
-  }
 
-  //chama uma função para criar uma estrutura de dados com todos os registros do arquivo de entrada, e cria também a estrutura de dados do indice. A função já faz as inserções no arquivo de dados e no arquivo de índice
-  lerCSV(arqDados, arqIndice, arqEntrada);
+    //agora testando se o arquivo de índice existe:
+    char caminho_1[100] = "./";
+    strcat(caminho_1, nomeArquivoIndice);
+    //abre arquivo pra escrita permitindo fopen
+    FILE* arqIndice = fopen(caminho_1, "rb+");
+    if(arqIndice == NULL){
+        puts("Falha no processamento do arquivo.");
+        return;
+    } else{
+        
+    }
+    //testando se csv existe
+    char caminho_2[] = "./";
+    strcat(caminho_2, nomeArquivoEntrada);
+    FILE *arqEntrada = fopen(caminho_2, "r");
+    //se der erro no processamento do arquivo, aparece a seguinte mensagem:
+    if(arqEntrada == NULL){
+        puts("Falha no processamento do arquivo.");
+        return;
+    } else{
+        
+    }
 
-  // //cria e abre arquivo pra escrita para verificar o byteoffset que está no cabeçalho
-  // FILE* arqDadosLeitura = fopen(caminho, "rb");
-  // if(arqDadosLeitura == NULL){
-  //   puts("Falha no processamento do arquivo.");
-  //   return;
-  // } else{
-    
-  // }
-  // int64_t proxByteoffset;
-  // fseek(arqDadosLeitura, 1, SEEK_SET);
-  // int quantidadePessoas = 0;
-  // fread(&quantidadePessoas, sizeof(int), 1, arqDados);
-  // int quantidadeRemovidos = 0;
-  // fread(&quantidadeRemovidos, sizeof(int), 1, arqDados);
-  // fread(&proxByteoffset, sizeof(int64_t), 1, arqDados);
-  // printf("Proximo Byteoffset disponivel: %ld\n", proxByteoffset);
-  // printf("Qtd pessoas: %d\n", quantidadePessoas);
-  // printf("Qtd removidos: %d\n", quantidadeRemovidos);
-  // fclose(arqDadosLeitura);
+    //chama uma função para criar uma estrutura de dados com todos os registros do arquivo de entrada, e cria também a estrutura de dados do indice. A função já faz as inserções no arquivo de dados e no arquivo de índice
+    lerCSV(arqDados, arqIndice, arqEntrada);
 
-  //usa função binário na tela como especificado no trabalho
-  binarioNaTela(nomeArquivoDados);
-  binarioNaTela(nomeArquivoIndice);
+    // //cria e abre arquivo pra escrita para verificar o byteoffset que está no cabeçalho
+    // FILE* arqDadosLeitura = fopen(caminho, "rb");
+    // if(arqDadosLeitura == NULL){
+    //   puts("Falha no processamento do arquivo.");
+    //   return;
+    // } else{
+        
+    // }
+    // int64_t proxByteoffset;
+    // fseek(arqDadosLeitura, 1, SEEK_SET);
+    // int quantidadePessoas = 0;
+    // fread(&quantidadePessoas, sizeof(int), 1, arqDados);
+    // int quantidadeRemovidos = 0;
+    // fread(&quantidadeRemovidos, sizeof(int), 1, arqDados);
+    // fread(&proxByteoffset, sizeof(int64_t), 1, arqDados);
+    // printf("Proximo Byteoffset disponivel: %ld\n", proxByteoffset);
+    // printf("Qtd pessoas: %d\n", quantidadePessoas);
+    // printf("Qtd removidos: %d\n", quantidadeRemovidos);
+    // fclose(arqDadosLeitura);
+
+    //usa função binário na tela como especificado no trabalho
+    binarioNaTela(nomeArquivoDados);
+    binarioNaTela(nomeArquivoIndice);
 }
-
 
 
 //FUNCIONALIDADE 3:
 
-// Definição da variável global
+//Definição da variável global
 struct registro_2 reg;
 
-//Funcionalidade 3:
+//FUNCIONALIDADE 3:
 void listarRegistros(char *nomeArquivoEntrada){
     // abrindo o caminho em que o arquivo está
     char caminho_2[100] = "./";
@@ -132,7 +128,7 @@ void listarRegistros(char *nomeArquivoEntrada){
     //criação de variáveis para armazenar cabeçalho
     char status;
     //lendo status
-    if (fread(&status, sizeof(status), 1, arqPessoa) != 1){
+    if (fread(&status, sizeof(char), 1, arqPessoa) != '1'){
         // Se o status for diferente de 1 o arquivo de dados está inconsistente
         puts("Falha no processamento do arquivo");
         fclose(arqPessoa);
@@ -173,9 +169,7 @@ void listarRegistros(char *nomeArquivoEntrada){
 }
 
 
-
 //FUNCIONALIDADE 4:
-
 void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //abertura dos arquivos
     char caminho[100] = "./";
@@ -303,9 +297,7 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
 }
 
 
-
 //FUNCIONALIDADE 6
-
 void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //a inserção será feita no final do arquivo, mas precisamos atualizar também o cabeçalho, então o arquivo será aberto com rb+
     FILE *arqDados = fopen(nomeArquivoPessoa, "rb+");
@@ -314,9 +306,7 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
         return;
     }
     //definindo status como inconsistente:
-    char statusInconsistente = '0';
-    fseek(arqDados, 0, SEEK_SET);
-    fwrite(&statusInconsistente, 1, sizeof(char), arqDados);
+    defineStatusArquivo(arqDados, '0');
     fseek(arqDados, 0, SEEK_SET);
 
     //é necessário ler o cabeçalho do arquivo para atualizar o mesmo depois 
@@ -330,8 +320,7 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
     }
     int numRegAtivos = cabecalho->quantidadePessoas;
     //definindo status como inconsistente:
-    fseek(arqIndice, 0, SEEK_SET);
-    fwrite(&statusInconsistente, 1, sizeof(char), arqIndice);
+    defineStatusArquivo(arqDados, '1');
     fseek(arqIndice, 0, SEEK_SET);
     //lê o arquivo de índice para memória primária
     noIndice *indices = lerArquivoIndice(arqIndice, numRegAtivos, n);
@@ -381,9 +370,7 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
 }
 
 
-
 // FUNCIONALIDADE 8:
-
 void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue){
     //para cada linha lida no arquivo csv, temos uma inserção no arquivo segue
     FILE *arqEntrada = fopen(nomeArquivoEntradaSegue, "r");
@@ -409,7 +396,7 @@ void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue
     int proxRRN = 0;
     int proxByteOffset = 0;
 
-    modificaCabecalhoArquivoSegue(arqSegue, status, quantidadeRegistros, proxByteOffset); //função que escreve cabeçalho do arquivo segue
+    criaCabecalhoArquivoSegue(arqSegue, status, quantidadeRegistros, proxByteOffset); //função que escreve cabeçalho do arquivo segue
 
     //pulando o cabeçalho
     proxByteOffset = 9;
@@ -494,19 +481,17 @@ void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue
     //printando variáveis do cabeçalho pra ver se deu certo:
     // printf("\n\nquantidade pessoas: %d\nproxRRN: %d\n", quantidadeRegistros, proxRRN);
 
-    char statusConsistente = '1';
-    fseek(arqSegue, 0, SEEK_SET);
-    fwrite(&statusConsistente, sizeof(char), 1, arqSegue);
+    defineStatusArquivo(arqSegue, '1');
 
     //print para debug
-    fseek(arqSegue, 0, SEEK_SET);
-    char statusVerifica;
-    int qtdVerifica;
-    int proxByteOffsetVerifica;
+    // fseek(arqSegue, 0, SEEK_SET);
+    // char statusVerifica;
+    // int qtdVerifica;
+    // int proxByteOffsetVerifica;
 
-    fread(&statusVerifica, sizeof(char), 1, arqSegue);
-    fread(&qtdVerifica, sizeof(int), 1, arqSegue);
-    fread(&proxByteOffsetVerifica, sizeof(int), 1, arqSegue);
+    // fread(&statusVerifica, sizeof(char), 1, arqSegue);
+    // fread(&qtdVerifica, sizeof(int), 1, arqSegue);
+    // fread(&proxByteOffsetVerifica, sizeof(int), 1, arqSegue);
 
     // printf("\n\n=== VERIFICAÇÃO DO CABEÇALHO ===\n");
     // printf("Status escrito: '1', lido: '%c' %s\n", 
@@ -529,9 +514,7 @@ void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue
 }
 
 
-
-//FUNÇÕES PARA FUNCIONALIDADE 9:
-
+//FUNCIONALIDADE 9:
 void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado){
     //primeiro é necessário trazer o arquivo todo para memória primária
     //abre o arquivo desordenado:
@@ -542,9 +525,8 @@ void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado)
         return;
     }
     //escreve o status pra 0
-    char statusInconsistente = '0';
-    fseek(arqDesordenado, 0, SEEK_SET);
-    fwrite(&statusInconsistente, sizeof(char), 1, arqDesordenado);
+    defineStatusArquivo(arqDesordenado, '0');
+
 
     //lê a quantidade de registros para alocar um vetor com o tamanho certo
     int qtdRegistros;
@@ -603,9 +585,8 @@ void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado)
     escreveSegueOrdenado(arqOrdenado, qtdRegistros, registros);//função que escreve tudo no arquivo de dados
 
     //atualiza status
-    fseek(arqOrdenado, 0, SEEK_SET);
-    char statusConsistente = '1';
-    fwrite(&statusConsistente, sizeof(char), 1, arqOrdenado);
+    defineStatusArquivo(arqOrdenado, '1');
+    defineStatusArquivo(arqDesordenado, '1');
 
     //fecha arquivos e mostra binário na tela:
     fclose(arqDesordenado); //fecha arquivo desordenado

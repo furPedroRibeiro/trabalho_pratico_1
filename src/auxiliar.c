@@ -16,6 +16,7 @@ static int quantidadePessoas = 0;
 static int quantidadeRemovidos = 0;
 static int64_t proxByteoffset = 17;
 
+//FUNÇÕES PARA FUNCIONALIDADE 2
 
 //essa função lê o arquivo csv, faz a inserção no arquivo de dados a cada linha lida do csv, e vai montando a lista duplamente encadeada para o índice ser inserido depois no arquivo de índice
 void lerCSV(FILE* arquivoDados, FILE* arquivoIndice, FILE* arquivoEntrada){
@@ -66,9 +67,7 @@ void lerCSV(FILE* arquivoDados, FILE* arquivoIndice, FILE* arquivoEntrada){
   //o arquivo csv pode ser fechado:
   fclose(arquivoEntrada);
   //com o cabeçalho todo reescrito e todos os registros cadastrados, basta atualizar o status novamente para 1, que é consistente
-  char statusConsistente = '1';
-  fseek(arquivoDados, 0, SEEK_SET);
-  fwrite(&statusConsistente, sizeof(char), 1, arquivoDados);
+  defineStatusArquivo(arquivoDados, '1');
 
   fclose(arquivoDados);
 
@@ -143,9 +142,8 @@ void insereRegistro(registro* novoRegistro, FILE* arquivoDados, int quantidadeRe
 
 void insereRegistroIndice(indice* raizListaIndice, FILE* arquivoIndice){
   //mudando status no cabeçalho:
-  char statusInconsistente = '0';
-  fseek(arquivoIndice, 0, SEEK_SET);
-  fwrite(&statusInconsistente, sizeof(char), 1, arquivoIndice);
+  defineStatusArquivo(arquivoIndice, '0');
+
   //volta ponteiro para escrever o primeiro registro de índice
   fseek(arquivoIndice, 12, SEEK_SET);
   //noAuxiliarIndice para receber a raíz da lista de registros de indice
@@ -169,9 +167,7 @@ void insereRegistroIndice(indice* raizListaIndice, FILE* arquivoIndice){
     noAuxiliarIndice = noAuxiliarIndice->proxIndice;
   }
 
-  char statusConsistente = '1';
-  fseek(arquivoIndice, 0, SEEK_SET);
-  fwrite(&statusConsistente, sizeof(char), 1, arquivoIndice);
+  defineStatusArquivo(arquivoIndice, '1');
 
   //fechando arquivo de índice
   fclose(arquivoIndice);
@@ -297,7 +293,6 @@ void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, int6
 }
 
 
-
 //funções para as funcionalidades 3 e 4
 
 // Funcao auxiliar para imprimir um registro
@@ -371,7 +366,6 @@ void imprimirRegistroPorByteOffset(FILE *arqPessoa, int64_t byteOffset, struct r
     //usa função auxiliar para imprimir
     imprimirRegistro(reg.idPessoa, reg.idadePessoa, reg.tamNomePessoa, reg.nomePessoa, reg.tamNomeUsuario, reg.nomeUsuario);
 }
-
 
 
 // FUNÇÕES PARA FUNCIONALIDADE 6:
@@ -561,10 +555,9 @@ void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
 }
 
 
-
 //FUNÇÕES PARA A FUNCIONALIDADE 8:
 
-void modificaCabecalhoArquivoSegue(FILE *arqSegue, char status, int quantidadeRegistros, int proxByteoffset){
+void criaCabecalhoArquivoSegue(FILE *arqSegue, char status, int quantidadeRegistros, int proxByteoffset){
   //o arquivo já está aberto, é só posicionar o ponteiro e escrever
   fseek(arqSegue, 0, SEEK_SET);
 
@@ -582,6 +575,9 @@ void insereArquivoSegue(FILE *arqSegue, noSegue *noAtual){
   fwrite(noAtual->dataFimQueSegue, sizeof(char), 10, arqSegue);
   fwrite(&noAtual->grauAmizade[0], sizeof(char), 1, arqSegue);
 }
+
+
+//FUNÇÕESP PARA A FUNCIONALIDADE 9:
 
 int comparaParaOrdenar(const void *a, const void *b){
   const noSegue *noA = (const noSegue*)a;
@@ -696,4 +692,9 @@ char *removerAspas(char *campo){
   }
   
   return campo;
+}
+
+void defineStatusArquivo(FILE *arquivo, char status){
+  fseek(arquivo, 0, SEEK_SET);  //posiciona ponteiro no byte 0
+  fwrite(&status, sizeof(char), 1, arquivo); //escreve status
 }
