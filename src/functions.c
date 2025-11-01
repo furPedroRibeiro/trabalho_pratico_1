@@ -266,209 +266,213 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     fclose(arqPessoa);
 }
 
+
 //FUNCIONALIDADE 5
-void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
-    char caminhoPessoa[100] = "./";
-    strcat(caminhoPessoa, nomeArquivoPessoa);
-    FILE *arqPessoa = fopen(caminhoPessoa, "rb+");
+void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n) {
+    // Abrir os arquivos
+    char caminho[100] = "./";
+    strcat(caminho, nomeArquivoPessoa);
+    FILE *arqPessoa = fopen(caminho, "rb+");
 
-    char caminhoIndice[100] = "./";
-    strcat(caminhoIndice, nomeArquivoIndice);
-    FILE *arqIndice = fopen(caminhoIndice, "rb+");
+    char caminho_2[100] = "./";
+    strcat(caminho_2, nomeArquivoIndice);
+    FILE *arquivoIndice = fopen(caminho_2, "rb+");
 
-    if(arqPessoa == NULL || arqIndice == NULL) {
+    if (arqPessoa == NULL || arquivoIndice == NULL) {
         puts("Falha no processamento do arquivo.");
-        if(arqPessoa) fclose(arqPessoa);
-        if(arqIndice) fclose(arqIndice);
         return;
     }
 
-    char statusInconsistente = '0';
-    fseek(arqPessoa, 0, SEEK_SET);
-    fwrite(&statusInconsistente, sizeof(char), 1, arqPessoa);
-    fseek(arqIndice, 0, SEEK_SET);
-    fwrite(&statusInconsistente, sizeof(char), 1, arqIndice);
-
-    fseek(arqIndice, 0, SEEK_END);
-    long tamanhoIndice = ftell(arqIndice) - 12;
-    int qtdIndice = tamanhoIndice > 0 ? tamanhoIndice / (sizeof(int) + sizeof(int64_t)) : 0;
-
-    indice2 *vetorIndice = NULL;
-    if(qtdIndice > 0){
-        fseek(arqIndice, 12, SEEK_SET);
-        vetorIndice = malloc(qtdIndice * sizeof(indice2));
-        if(vetorIndice == NULL){
-            puts("Falha no processamento do arquivo.");
-            fclose(arqPessoa);
-            fclose(arqIndice);
-            return;
-        }
-        for(int i = 0; i < qtdIndice; i++){
-            fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arqIndice);
-            fread(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arqIndice);
-        }
+    // Verifica consistência
+    char statusPessoa, statusIndice;
+    fread(&statusPessoa, sizeof(char), 1, arqPessoa);
+    if (statusPessoa != '1') {
+        puts("Falha no processamento do arquivo.");
+        fclose(arqPessoa);
+        fclose(arquivoIndice);
+        return;
     }
 
+    fread(&statusIndice, sizeof(char), 1, arquivoIndice);
+    if (statusIndice != '1') {
+        puts("Falha no processamento do arquivo.");
+        fclose(arqPessoa);
+        fclose(arquivoIndice);
+        return;
+    }
+
+    // Marca arquivos como inconsistentes
+    fseek(arqPessoa, 0, SEEK_SET);
+    fputc('0', arqPessoa);
+    fseek(arquivoIndice, 0, SEEK_SET);
+    fputc('0', arquivoIndice);
+
+    // Carregar índice em memória
+    fseek(arquivoIndice, 0, SEEK_END);
+    long sizeIndice = ftell(arquivoIndice) - 12; // cabeçalho = 12 bytes
+    int qtdIndice = sizeIndice / (sizeof(int) + sizeof(int64_t));
+    fseek(arquivoIndice, 12, SEEK_SET);
+
+    indice2 *vetorIndice = malloc(qtdIndice * sizeof(indice2));
+    for (int i = 0; i < qtdIndice; i++) {
+        fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
+        fread(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
+    }
+    fclose(arquivoIndice);
+
+    // Tamanho do arquivo de dados
     fseek(arqPessoa, 0, SEEK_END);
     long sizeDados = ftell(arqPessoa);
-    
-    int qtdPessoas, qtdRemovidos;
-    int64_t proxByte;
-    fseek(arqPessoa, 1, SEEK_SET);
-    fread(&qtdPessoas, sizeof(int), 1, arqPessoa);
-    fread(&qtdRemovidos, sizeof(int), 1, arqPessoa);
-    fread(&proxByte, sizeof(int64_t), 1, arqPessoa);
 
-    for(int i = 0; i < n; i++){
+    // Loop para n remoções
+    for (int i = 0; i < n; i++) {
         int entrada;
         char nomeCampo[100], valorCampo[100];
+
         scanf("%d", &entrada);
         scanf(" %[^=]", nomeCampo);
         getchar();
         scan_quote_string(valorCampo);
 
+        // Busca registros correspondentes
         resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, qtdIndice, sizeDados, nomeCampo, valorCampo);
 
-        if(resultados == NULL){
-            continue;
-        }
+        if (resultados == NULL) {
+            printf("Registro inexistente.\n");
+        } else {
+            resultadoBusca *atual = resultados;
+            while (atual != NULL) {
+                // Marcar como removido
+                fseek(arqPessoa, atual->byteOffset, SEEK_SET);
+                fputc('1', arqPessoa);
 
-        resultadoBusca *atual = resultados;
-        while(atual != NULL){
-            fseek(arqPessoa, atual->byteOffset, SEEK_SET);
-            char removido = '1';
-            fwrite(&removido, sizeof(char), 1, arqPessoa);
-            
-            qtdRemovidos++;
-            qtdPessoas--;
-
-            int idParaRemover = atual->idPessoa;
-            for(int j = 0; j < qtdIndice; j++){
-                if(vetorIndice[j].idPessoa == idParaRemover){
-                    for(int k = j; k < qtdIndice - 1; k++){
-                        vetorIndice[k] = vetorIndice[k + 1];
+                // Remover do índice (em memória)
+                for (int j = 0; j < qtdIndice; j++) {
+                    if (vetorIndice[j].idPessoa == atual->idPessoa) {
+                        for (int k = j; k < qtdIndice - 1; k++) {
+                            vetorIndice[k] = vetorIndice[k + 1];
+                        }
+                        qtdIndice--;
+                        break;
                     }
-                    qtdIndice--;
-                    break;
                 }
+                atual = atual->proxResultado;
             }
-
-            atual = atual->proxResultado;
+            liberarListaResultados(resultados);
         }
-        liberarListaResultados(resultados);
     }
 
-    if(qtdPessoas < 0) qtdPessoas = 0;
-
-    fseek(arqPessoa, 1, SEEK_SET);
-    fwrite(&qtdPessoas, sizeof(int), 1, arqPessoa);
-    fwrite(&qtdRemovidos, sizeof(int), 1, arqPessoa);
-    fwrite(&proxByte, sizeof(int64_t), 1, arqPessoa);
-
-    fclose(arqIndice);
-    arqIndice = fopen(caminhoIndice, "wb");
-    if(arqIndice == NULL) {
+    // Reescrever o arquivo de índice com os registros ainda válidos
+    arquivoIndice = fopen(caminho_2, "wb");
+    if (arquivoIndice == NULL) {
         puts("Falha no processamento do arquivo.");
         fclose(arqPessoa);
-        if(vetorIndice) free(vetorIndice);
+        free(vetorIndice);
         return;
     }
 
-    char status = '1';
-    char lixo[] = "$$$$$$$$$$$";
-    fwrite(&status, sizeof(char), 1, arqIndice);
-    fwrite(lixo, sizeof(char), strlen(lixo), arqIndice);
+    // Cabeçalho do índice (status e topo da lista removidos)
+    char status = '0';
+    fwrite(&status, sizeof(char), 1, arquivoIndice);
+    int topoLista = -1;
+    fwrite(&topoLista, sizeof(int), 1, arquivoIndice);
+    int qtdRegistros = qtdIndice;
+    fwrite(&qtdRegistros, sizeof(int), 1, arquivoIndice);
 
-    for(int i = 0; i < qtdIndice; i++){
-        fwrite(&vetorIndice[i].idPessoa, sizeof(int), 1, arqIndice);
-        fwrite(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arqIndice);
+    // Escrever os índices válidos
+    for (int i = 0; i < qtdIndice; i++) {
+        fwrite(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
+        fwrite(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
     }
 
-    status = '1';
+    // Marcar arquivos como consistentes novamente
     fseek(arqPessoa, 0, SEEK_SET);
-    fwrite(&status, sizeof(char), 1, arqPessoa);
-    fseek(arqIndice, 0, SEEK_SET);
-    fwrite(&status, sizeof(char), 1, arqIndice);
+    fputc('1', arqPessoa);
+    fseek(arquivoIndice, 0, SEEK_SET);
+    fputc('1', arquivoIndice);
 
+    // Fechar tudo
     fclose(arqPessoa);
-    fclose(arqIndice);
-    if(vetorIndice) free(vetorIndice);
+    fclose(arquivoIndice);
+    free(vetorIndice);
 
+    // Mostrar arquivos binários
     binarioNaTela(nomeArquivoPessoa);
     binarioNaTela(nomeArquivoIndice);
 }
 
 
-// //FUNCIONALIDADE 6
+//FUNCIONALIDADE 6
 
-// void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
-//     //a inserção será feita no final do arquivo, mas precisamos atualizar também o cabeçalho, então o arquivo será aberto com rb+
-//     FILE *arqDados = fopen(nomeArquivoPessoa, "rb+");
-//     if(arqDados == NULL){
-//         puts("Falha no processamento do arquivo.");
-//         return;
-//     }
-//     //definindo status como inconsistente:
-//     char statusInconsistente = '0';
-//     fseek(arqDados, 0, SEEK_SET);
-//     fwrite(&statusInconsistente, 1, sizeof(char), arqDados);
-//     fseek(arqDados, 0, SEEK_SET);
+void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
+    //a inserção será feita no final do arquivo, mas precisamos atualizar também o cabeçalho, então o arquivo será aberto com rb+
+    FILE *arqDados = fopen(nomeArquivoPessoa, "rb+");
+    if(arqDados == NULL){
+        puts("Falha no processamento do arquivo.");
+        return;
+    }
+    //definindo status como inconsistente:
+    char statusInconsistente = '0';
+    fseek(arqDados, 0, SEEK_SET);
+    fwrite(&statusInconsistente, 1, sizeof(char), arqDados);
+    fseek(arqDados, 0, SEEK_SET);
 
-//     //é necessário ler o cabeçalho do arquivo para atualizar o mesmo depois 
-//     cabecalhoPessoa* cabecalho = lerCabecalho(arqDados);
+    //é necessário ler o cabeçalho do arquivo para atualizar o mesmo depois 
+    cabecalhoPessoa* cabecalho = lerCabecalho(arqDados);
 
-//     //abrindo arquivo de índice, que também deve ser atualizado:
-//     FILE *arqIndice = fopen(nomeArquivoIndice, "rb+");
-//     if(arqIndice == NULL){
-//         puts("Falha no processamento do arquivo.");
-//         return;
-//     }
-//     int numRegAtivos = cabecalho->quantidadePessoas;
-//     //definindo status como inconsistente:
-//     fseek(arqIndice, 0, SEEK_SET);
-//     fwrite(&statusInconsistente, 1, sizeof(char), arqIndice);
-//     fseek(arqIndice, 0, SEEK_SET);
-//     //lê o arquivo de índice para memória primária
-//     noIndice *indices = lerArquivoIndice(arqIndice, numRegAtivos, n);
+    //abrindo arquivo de índice, que também deve ser atualizado:
+    FILE *arqIndice = fopen(nomeArquivoIndice, "rb+");
+    if(arqIndice == NULL){
+        puts("Falha no processamento do arquivo.");
+        return;
+    }
+    int numRegAtivos = cabecalho->quantidadePessoas;
+    //definindo status como inconsistente:
+    fseek(arqIndice, 0, SEEK_SET);
+    fwrite(&statusInconsistente, 1, sizeof(char), arqIndice);
+    fseek(arqIndice, 0, SEEK_SET);
+    //lê o arquivo de índice para memória primária
+    noIndice *indices = lerArquivoIndice(arqIndice, numRegAtivos, n);
     
-//     //devemos captar agora n entradas do usuário, e a cada entrada é feita uma inserção no arquivo de dados pessoa
-//     //um while é usado
-//     int i = 0;
-//     while(i < n){
-//         //é necessário ler o cabeçalho do arquivo para utilizar as informações contidas nele 
-//         cabecalhoPessoa* cabecalhoAtual = lerCabecalho(arqDados);
-//         //vamos captar agora mais uma entrada do usuário chamando uma função, que devolve um array nó com os dados a serem inseridos 
-//         noRegistroUnico *regUnico = lerEntradaInsercaoUnica();
-//         //depois da entrada ser captada, devemos fazer a inserção no arquivo de dados pessoa
-//         insereRegistroUnicoPessoa(arqDados, regUnico, cabecalhoAtual);
-//         //é necessário também inserir no vetor de índices o novo registro
-//         insereRegistroUnicoVetorIndice(indices, (cabecalhoAtual->quantidadePessoas)+1, regUnico->idPessoa, cabecalhoAtual->proxByteoffset);
-//         //desalocando cabecalho atual para que ele seja lido de novo no começo do while
-//         free(cabecalhoAtual);
-//         free(regUnico->nomePessoa);
-//         free(regUnico->nomeUsuario);
-//         free(regUnico);
-//         i++;
-//     }
-//     //essa função armazena novamente o arquivo de índice, agora atualizado
-//     insereIndice(indices, arqIndice, cabecalho->quantidadePessoas + n);
-//     //depois de toda a funcionalidade ser executada, basta voltar o status consistente para os 2 arquivos e desalocar o que foi usado de memória, além de fechar os 2 arquivos
-//     free(cabecalho);
-//     free(indices);
+    //devemos captar agora n entradas do usuário, e a cada entrada é feita uma inserção no arquivo de dados pessoa
+    //um while é usado
+    int i = 0;
+    while(i < n){
+        //é necessário ler o cabeçalho do arquivo para utilizar as informações contidas nele 
+        cabecalhoPessoa* cabecalhoAtual = lerCabecalho(arqDados);
+        //vamos captar agora mais uma entrada do usuário chamando uma função, que devolve um array nó com os dados a serem inseridos 
+        noRegistroUnico *regUnico = lerEntradaInsercaoUnica();
+        //depois da entrada ser captada, devemos fazer a inserção no arquivo de dados pessoa
+        insereRegistroUnicoPessoa(arqDados, regUnico, cabecalhoAtual);
+        //é necessário também inserir no vetor de índices o novo registro
+        insereRegistroUnicoVetorIndice(indices, (cabecalhoAtual->quantidadePessoas)+1, regUnico->idPessoa, cabecalhoAtual->proxByteoffset);
+        //desalocando cabecalho atual para que ele seja lido de novo no começo do while
+        free(cabecalhoAtual);
+        free(regUnico->nomePessoa);
+        free(regUnico->nomeUsuario);
+        free(regUnico);
+        i++;
+    }
+    //essa função armazena novamente o arquivo de índice, agora atualizado
+    insereIndice(indices, arqIndice, cabecalho->quantidadePessoas + n);
+    //depois de toda a funcionalidade ser executada, basta voltar o status consistente para os 2 arquivos e desalocar o que foi usado de memória, além de fechar os 2 arquivos
+    free(cabecalho);
+    free(indices);
 
-//     char statusConsistente = '1';
+    char statusConsistente = '1';
 
-//     fseek(arqDados, 0, SEEK_SET);
-//     fwrite(&statusConsistente, 1, sizeof(char), arqDados);
-//     fseek(arqDados, 0, SEEK_SET);
+    fseek(arqDados, 0, SEEK_SET);
+    fwrite(&statusConsistente, 1, sizeof(char), arqDados);
+    fseek(arqDados, 0, SEEK_SET);
     
-//     fseek(arqIndice, 0, SEEK_SET);
-//     fwrite(&statusConsistente, 1, sizeof(char), arqIndice);
-//     fseek(arqIndice, 0, SEEK_SET);
+    fseek(arqIndice, 0, SEEK_SET);
+    fwrite(&statusConsistente, 1, sizeof(char), arqIndice);
+    fseek(arqIndice, 0, SEEK_SET);
 
-//     binarioNaTela(nomeArquivoPessoa);
-//     binarioNaTela(nomeArquivoIndice);
+    binarioNaTela(nomeArquivoPessoa);
+    binarioNaTela(nomeArquivoIndice);
 
-//     fclose(arqDados);
-//     fclose(arqIndice);
-// }
+    fclose(arqDados);
+    fclose(arqIndice);
+}
+
