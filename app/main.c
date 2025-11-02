@@ -108,6 +108,15 @@ int main(){
       inserirUnicoRegistro(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, p);
       break;
     case 7:
+      //obtém nome do arquivo binário de pessoas gerado anteriormente:
+      nomeArquivoEntradaPessoa = strtok(NULL, " ");
+      //obtém nome do arquivo binário de índice gerado anteriormente:
+      nomeArquivoIndicePessoa = strtok(NULL, " ");
+      //obtém n que diz quantas vezes a inserção vai acontecer
+      parametro = strtok(NULL, " ");
+      int q = atoi(parametro);
+      //chama a funcionalidade 7
+      atualizarRegistro(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, q);
       break;
     case 8:
       //obtém nome do arquivo de entrada(csv)

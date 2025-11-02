@@ -554,6 +554,195 @@ void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
   return;
 }
 
+//FUNCIONALIDADE 7
+
+//função auxiliar para atualizar um registro individual
+void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual){
+    //posiciona no registro
+    fseek(arqPessoa, posRegistro, SEEK_SET);
+    
+    //lê o registro completo
+    char removido;
+    int tamRegistroAtual;
+    fread(&removido, sizeof(char), 1, arqPessoa);
+    fread(&tamRegistroAtual, sizeof(int), 1, arqPessoa);
+    
+    int idPessoa, idadePessoa, tamNomePessoa, tamNomeUsuario;
+    char nomePessoa[100] = "";
+    char nomeUsuario[100] = "";
+    
+    fread(&idPessoa, sizeof(int), 1, arqPessoa);
+    fread(&idadePessoa, sizeof(int), 1, arqPessoa);
+    fread(&tamNomePessoa, sizeof(int), 1, arqPessoa);
+    
+    if(tamNomePessoa > 0){
+        fread(nomePessoa, sizeof(char), tamNomePessoa, arqPessoa);
+        nomePessoa[tamNomePessoa] = '\0';
+    }
+    
+    fread(&tamNomeUsuario, sizeof(int), 1, arqPessoa);
+    
+    if(tamNomeUsuario > 0){
+        fread(nomeUsuario, sizeof(char), tamNomeUsuario, arqPessoa);
+        nomeUsuario[tamNomeUsuario] = '\0';
+    }
+    
+    //Aplica a atualização nos valores
+    int novoTamNomePessoa = tamNomePessoa;
+    int novoTamNomeUsuario = tamNomeUsuario;
+    int novaIdadePessoa = idadePessoa;
+    char novoNomePessoa[100];
+    char novoNomeUsuario[100];
+    
+    strcpy(novoNomePessoa, nomePessoa);
+    strcpy(novoNomeUsuario, nomeUsuario);
+    
+    if(strcmp(nomeCampoAtualiza, "idadePessoa") == 0){
+        if(strcmp(valorCampoAtualiza, "NULO") == 0){
+            novaIdadePessoa = -1;
+        } else {
+            novaIdadePessoa = atoi(valorCampoAtualiza);
+        }
+    }
+    else if(strcmp(nomeCampoAtualiza, "nomePessoa") == 0){
+        if(strcmp(valorCampoAtualiza, "NULO") == 0){
+            novoTamNomePessoa = 0;
+            novoNomePessoa[0] = '\0';
+        } else {
+            strcpy(novoNomePessoa, valorCampoAtualiza);
+            novoTamNomePessoa = strlen(valorCampoAtualiza);
+        }
+    }
+    else if(strcmp(nomeCampoAtualiza, "nomeUsuario") == 0){
+        strcpy(novoNomeUsuario, valorCampoAtualiza);
+        novoTamNomeUsuario = strlen(valorCampoAtualiza);
+    }
+    
+    //calcula o novo tamanho do registro
+    int novoTamRegistro = 16 + novoTamNomePessoa + novoTamNomeUsuario;
+    
+    if(novoTamRegistro <= tamRegistroAtual){
+        //Caso 1: inserir com lixo
+        //o novo registro cabe no espaço atual
+        
+        fseek(arqPessoa, posRegistro + 5, SEEK_SET); //Pula removido e tamRegistro
+        
+        //escreve os campos atualizados
+        fwrite(&idPessoa, sizeof(int), 1, arqPessoa);
+        fwrite(&novaIdadePessoa, sizeof(int), 1, arqPessoa);
+        fwrite(&novoTamNomePessoa, sizeof(int), 1, arqPessoa);
+        
+        if(novoTamNomePessoa > 0){
+            fwrite(novoNomePessoa, sizeof(char), novoTamNomePessoa, arqPessoa);
+        }
+        
+        fwrite(&novoTamNomeUsuario, sizeof(int), 1, arqPessoa);
+        
+        if(novoTamNomeUsuario > 0){
+            fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
+        }
+        
+        //preenche o resto com lixo '$'
+        int bytesEscritos = 16 + novoTamNomePessoa + novoTamNomeUsuario;
+        int bytesLixo = tamRegistroAtual - bytesEscritos;
+        
+        for(int j = 0; j < bytesLixo; j++){
+            char lixo = '$';
+            fwrite(&lixo, sizeof(char), 1, arqPessoa);
+        }
+        
+        fflush(arqPessoa);
+        
+    } else {
+        //Caso 2: remover logicamente e inserir novo registro
+        //o novo registro não cabe no espaço atual
+        
+        //marca o registro atual como removido
+        fseek(arqPessoa, posRegistro, SEEK_SET);
+        char marcaRemovido = '1';
+        fwrite(&marcaRemovido, sizeof(char), 1, arqPessoa);
+        fflush(arqPessoa);
+        
+        //remove do índice
+        for(int j = 0; j < cabecalho->quantidadePessoas; j++){
+            if(vetorIndice[j].idPessoa == idPessoaAtual){
+                // Desloca todos os elementos para a esquerda
+                for(int k = j; k < cabecalho->quantidadePessoas - 1; k++){
+                    vetorIndice[k] = vetorIndice[k + 1];
+                }
+                cabecalho->quantidadePessoas--;
+                break;
+            }
+        }
+        
+        //atualiza quantidadeRemovidos
+        cabecalho->quantidadeRemovidos++;
+        
+        //insere como NOVO REGISTRO no final
+        fseek(arqPessoa, cabecalho->proxByteoffset, SEEK_SET);
+        
+        char removidoNovo = '0';
+        fwrite(&removidoNovo, sizeof(char), 1, arqPessoa);
+        fwrite(&novoTamRegistro, sizeof(int), 1, arqPessoa);
+        fwrite(&idPessoa, sizeof(int), 1, arqPessoa);
+        fwrite(&novaIdadePessoa, sizeof(int), 1, arqPessoa);
+        fwrite(&novoTamNomePessoa, sizeof(int), 1, arqPessoa);
+        
+        if(novoTamNomePessoa > 0){
+            fwrite(novoNomePessoa, sizeof(char), novoTamNomePessoa, arqPessoa);
+        }
+        
+        fwrite(&novoTamNomeUsuario, sizeof(int), 1, arqPessoa);
+        
+        if(novoTamNomeUsuario > 0){
+            fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
+        }
+        
+        //adiciona ao índice na posição ordenada correta
+        int pos = buscaBinariaAtualizar(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
+        
+        //desloca para abrir espaço
+        for(int j = cabecalho->quantidadePessoas; j > pos; j--){
+            vetorIndice[j] = vetorIndice[j-1];
+        }
+        
+        //insere o novo índice
+        vetorIndice[pos].idPessoa = idPessoa;
+        vetorIndice[pos].byteOffset = cabecalho->proxByteoffset;
+        
+        //atualiza o cabeçalho
+        cabecalho->quantidadePessoas++;
+        cabecalho->proxByteoffset += novoTamRegistro + 5;
+        
+        fflush(arqPessoa);
+    }
+}
+
+
+int buscaBinariaAtualizar(indice* vetorIndice, int tamanho, int idPessoa){
+    int inicio = 0;
+    int fim = tamanho - 1;
+    
+    if (tamanho == 0) return 0;
+    if (idPessoa < vetorIndice[0].idPessoa) return 0;
+    if (idPessoa > vetorIndice[fim].idPessoa) return tamanho;
+    
+    while (inicio <= fim) {
+        int meio = inicio + (fim - inicio) / 2;
+        
+        if (vetorIndice[meio].idPessoa == idPessoa) {
+            return meio;
+        }
+        else if (vetorIndice[meio].idPessoa < idPessoa) {
+            inicio = meio + 1;
+        }
+        else {
+            fim = meio - 1;
+        }
+    }
+    
+    return inicio;
+}
 
 //FUNÇÕES PARA A FUNCIONALIDADE 8:
 

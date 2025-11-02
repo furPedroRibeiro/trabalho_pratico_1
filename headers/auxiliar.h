@@ -107,6 +107,10 @@ noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n);
 void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset);
 void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho);
 
+//funções para a funcionalidade 7
+void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual);
+int buscaBinariaAtualizar(indice* vetorIndice, int tamanho, int idPessoa);
+
 //funções para funcionalidade 8:
 
 //estrutura nó para um registro de segue:
