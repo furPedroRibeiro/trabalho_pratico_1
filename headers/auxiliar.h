@@ -42,6 +42,18 @@ typedef struct indice2{
   int64_t byteOffset;
 } indice2;
 
+//estrutura de dados do tipo lista duplamente encadeada para armazenar os campos encontrados na busca
+typedef struct resultadoBusca{
+  int idPessoa;
+  int idadePessoa;
+  int tamNomePessoa;
+  char nomePessoa[100];
+  int tamNomeUsuario;
+  char nomeUsuario[100];
+  int64_t byteOffset;
+  struct resultadoBusca *proxResultado;
+} resultadoBusca;
+
 //define as variáveis para raíz da lista 1 e da lista 2
 extern registro* raizListaPessoas;
 extern indice* raizListaIndice;
@@ -62,9 +74,8 @@ void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, int6
 
 //funções para as funcionalidade 3 e 4
 void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario);
-int64_t buscaBinariaIndice(indice2 *vetor, int tamanho, int idBuscado);
+int64_t buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado);
 void imprimirRegistroPorByteOffset(FILE *arqPessoa, int64_t byteOffset, struct registro_2 reg);
-
 
 //funções para a funcionalidade 6
 
@@ -95,7 +106,6 @@ void insereRegistroUnicoPessoa(FILE *nomeArquivoPessoa, noRegistroUnico* regUnic
 noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n);
 void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset);
 void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho);
-
 
 //funções para funcionalidade 8:
 

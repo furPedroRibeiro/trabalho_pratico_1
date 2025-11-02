@@ -20,6 +20,9 @@ void listarRegistros(char *nomeArquivoEntrada);
 //funcionalidade 4
 void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n);
 
+//funcionalidade 5
+void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n);
+
 //funcionalidade 6
 void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n);
 

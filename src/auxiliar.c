@@ -319,7 +319,7 @@ void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *no
 }
 
 //busca binaria para encontrar o byteOffset do registro com o id buscado
-int64_t buscaBinariaIndice(indice2 *vetor, int tamanho, int idBuscado){
+int64_t buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado){
     int begin = 0;
     int end = tamanho - 1;
 
