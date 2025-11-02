@@ -7,6 +7,16 @@
 4 pessoas4.bin indice4.bin 1
 1 idPessoa=96
 
+5 nao_existe.bin indice.bin 1
+1 idPessoa=245
+
+5 pessoas.bin indice.bin 5
+1 idPessoa=69
+2 idPessoa=520
+3 idPessoa=2000
+4 nomeUsuario="MATEUS90"
+5 idadePessoa=NULO
+
 6 pessoas.bin indice.bin 3
 1 625, "SAMANTHA PEREIRA SANTOS", 13, "SAMANTHAPS"
 2 645, "VITORIA PRADO CAMPOS", NULO, "VIVICA"

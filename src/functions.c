@@ -299,27 +299,23 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
 //Funcionalidade 5
 void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     // Abertura dos arquivos
-    char caminho[100] = "./";
-    strcat(caminho, nomeArquivoPessoa);
-    FILE *arqPessoa = fopen(caminho, "rb+");
-    char caminho_2[100] = "./";
-    strcat(caminho_2, nomeArquivoIndice);
-    FILE *arquivoIndice = fopen(caminho_2, "rb+");
+    FILE *arqPessoa = fopen(nomeArquivoPessoa, "rb+");
+    FILE *arquivoIndice = fopen(nomeArquivoIndice, "rb+");
     
     if(arqPessoa == NULL || arquivoIndice == NULL){
         puts("Falha no processamento do arquivo.");
         return;
     }
     
-    // Leitura do status dos arquivos
+    // Leitura do status dos arquivos, se tiver inconsistente, o programa da erro e retorna
     char statusPessoa, statusIndice;
-    if (fread(&statusPessoa, sizeof(statusPessoa), 1, arqPessoa) != 1 || statusPessoa != '1'){
+    if (fread(&statusPessoa, sizeof(char), 1, arqPessoa) != 1 || statusPessoa != '1'){
         puts("Falha no processamento do arquivo.");
         fclose(arqPessoa);
         fclose(arquivoIndice);
         return;
     }
-    if (fread(&statusIndice, sizeof(statusIndice), 1, arquivoIndice) != 1 || statusIndice != '1'){
+    if (fread(&statusIndice, sizeof(char), 1, arquivoIndice) != 1 || statusIndice != '1'){
         puts("Falha no processamento do arquivo.");
         fclose(arqPessoa);
         fclose(arquivoIndice);
@@ -327,35 +323,27 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     }
     
     // Marca os arquivos como inconsistentes durante a operação
-    statusPessoa = '0';
-    statusIndice = '0';
+    defineStatusArquivo(arqPessoa, '0');
+    defineStatusArquivo(arquivoIndice, '0');
+    
+    // traz o cabeçalho pra memória primária
+    cabecalhoPessoa *cabecalho = malloc(sizeof(cabecalhoPessoa));
     fseek(arqPessoa, 0, SEEK_SET);
-    fwrite(&statusPessoa, sizeof(char), 1, arqPessoa);
-    fseek(arquivoIndice, 0, SEEK_SET);
-    fwrite(&statusIndice, sizeof(char), 1, arquivoIndice);
-    fflush(arqPessoa);
-    fflush(arquivoIndice);
+    fread(&cabecalho->status[0], sizeof(char), 1, arqPessoa);
+    fread(&cabecalho->quantidadePessoas, sizeof(int), 1, arqPessoa);
+    fread(&cabecalho->quantidadeRemovidos, sizeof(int), 1, arqPessoa);
+    fread(&cabecalho->proxByteoffset, sizeof(int64_t), 1, arqPessoa);
+    cabecalho->status[1] = '\0';
     
-    // Carrega o arquivo de índice em um vetor
-    fseek(arquivoIndice, 0, SEEK_END);
-    long sizeIndice = ftell(arquivoIndice) - 12;
-    int qtdIndice = sizeIndice / (sizeof(int) + sizeof(int64_t));
-    int qtdIndiceOriginal = qtdIndice;
-    
-    // Lê o proxByteOffset original para manter
-    fseek(arquivoIndice, 5, SEEK_SET);
-    int64_t proxByteOffsetOriginal;
-    fread(&proxByteOffsetOriginal, sizeof(int64_t), 1, arquivoIndice);
-    
-    fseek(arquivoIndice, 12, SEEK_SET);
-    indice *vetorIndice = malloc(qtdIndiceOriginal * sizeof(indice));
-    for(int i = 0; i < qtdIndiceOriginal; i++){
+    fseek(arquivoIndice, 12, SEEK_SET); // pula o cabeçalho para montar vetor de índices
+    indice *vetorIndice = malloc(cabecalho->quantidadePessoas * sizeof(indice));
+    for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
         fread(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
     }
     
     // Vetor para marcar IDs que devem ser removidos
-    int *idsParaRemover = malloc(qtdIndiceOriginal * sizeof(int));
+    int *idsParaRemover = malloc(cabecalho->quantidadePessoas * sizeof(int));
     int qtdIdsParaRemover = 0;
     
     // Obtém o tamanho do arquivo pessoa
@@ -395,7 +383,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         // Caso 1: Busca por idPessoa usando índice
         if(strcmp(nomeCampo, "idPessoa") == 0){
             int idBusca = atoi(valorCampo);
-            int64_t offset = buscaBinariaIndice(vetorIndice, qtdIndiceOriginal, idBusca);
+            int64_t offset = buscaBinariaIndice(vetorIndice, cabecalho->quantidadePessoas, idBusca);
             
             if(offset != -1){
                 // Marca o registro como removido no arquivo de dados
@@ -469,43 +457,44 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
                 }
                 
                 // Verifica se o registro satisfaz o critério de busca
-                int registroEncotrado = 0;
+
+                int registroEncontrado = 0;
                 
                 if(strcmp(nomeCampo, "idadePessoa") == 0){
                     if(strcmp(valorCampo, "NULO") == 0){
                         if(idadePessoa == -1){
-                            registroEncotrado = 1;
+                            registroEncontrado = 1;
                         }
                     } else {
                         if(idadePessoa == atoi(valorCampo)){
-                            registroEncotrado = 1;
+                            registroEncontrado = 1;
                         }
                     }
                 }
                 else if(strcmp(nomeCampo, "nomePessoa") == 0){
                     if(strcmp(valorCampo, "NULO") == 0){
                         if(tamNomePessoa == 0){
-                            registroEncotrado = 1;
+                            registroEncontrado = 1;
                         }
                     } else {
                         if(strcmp(nomePessoa, valorCampo) == 0){
-                            registroEncotrado = 1;
+                            registroEncontrado = 1;
                         }
                     }
                 }
                 else if(strcmp(nomeCampo, "nomeUsuario") == 0){
                     if(strcmp(valorCampo, "NULO") == 0){
                         if(tamNomeUsuario == 0){
-                            registroEncotrado = 1;
+                            registroEncontrado = 1;
                         }
                     } else {
                         if(strcmp(nomeUsuario, valorCampo) == 0){
-                            registroEncotrado = 1;
+                            registroEncontrado = 1;
                         }
                     }
                 }
                 
-                if(registroEncotrado == 1){
+                if(registroEncontrado == 1){
                     // Marca o registro como removido
                     fseek(arqPessoa, posRegistro, SEEK_SET);
                     char marcaRemovido = '1';
@@ -522,27 +511,37 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
             }
         }
         
-        if(encontrou == 0){
-            printf("Registro inexistente.\n");
-        }
+        // if(encontrou == 0){
+        //     printf("Registro inexistente.\n");
+        // }
     }
     
     // Remove todos os IDs marcados do vetor de índices
     for(int i = 0; i < qtdIdsParaRemover; i++){
-        for(int j = 0; j < qtdIndice; j++){
+        for(int j = 0; j < cabecalho->quantidadePessoas; j++){
             if(vetorIndice[j].idPessoa == idsParaRemover[i]){
-                for(int k = j; k < qtdIndice - 1; k++){
+                for(int k = j; k < cabecalho->quantidadePessoas - 1; k++){
                     vetorIndice[k] = vetorIndice[k + 1];
                 }
-                qtdIndice--;
+                cabecalho->quantidadePessoas--;
                 break;
             }
         }
     }
+
+    // atualiza cabeçalho do arquivo pessoas
+    cabecalho->quantidadeRemovidos += qtdIdsParaRemover;
+
+    //escreve cabeçalho do arquivo pessoas atualizado
+    fseek(arqPessoa, 1, SEEK_SET);
+    fwrite(&cabecalho->quantidadePessoas, sizeof(int), 1, arqPessoa);
+    fwrite(&cabecalho->quantidadeRemovidos, sizeof(int), 1, arqPessoa);
     
     // Reescreve o arquivo de índice
     fclose(arquivoIndice);
-    arquivoIndice = fopen(caminho_2, "wb");
+    remove(nomeArquivoIndice);
+
+    arquivoIndice = fopen(nomeArquivoIndice, "wb+");
     if(arquivoIndice == NULL){
         puts("Falha no processamento do arquivo.");
         free(vetorIndice);
@@ -552,27 +551,26 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     }
     
     // Escreve o cabeçalho do índice
-    statusIndice = '1';
+    statusIndice = '0';
+    fseek(arquivoIndice, 0, SEEK_SET);
     fwrite(&statusIndice, sizeof(char), 1, arquivoIndice);
-    fwrite(&qtdIndice, sizeof(int), 1, arquivoIndice);
-    fwrite(&proxByteOffsetOriginal, sizeof(int64_t), 1, arquivoIndice);
+    char lixo[12] = "$$$$$$$$$$$";
+    fwrite(lixo, sizeof(char), 11, arquivoIndice);
     
-    // Escreve os índices
-    for(int i = 0; i < qtdIndice; i++){
+    // Escreve os índices após o cabeçalho
+    //
+    for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fwrite(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
         fwrite(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
     }
     
     // Marca os arquivos como consistentes
-    statusPessoa = '1';
-    statusIndice = '1';
-    fseek(arqPessoa, 0, SEEK_SET);
-    fwrite(&statusPessoa, sizeof(char), 1, arqPessoa);
-    fseek(arquivoIndice, 0, SEEK_SET);
-    fwrite(&statusIndice, sizeof(char), 1, arquivoIndice);
+    defineStatusArquivo(arqPessoa, '1');
+    defineStatusArquivo(arquivoIndice, '1');
     
     free(vetorIndice);
     free(idsParaRemover);
+
     fclose(arqPessoa);
     fclose(arquivoIndice);
     
