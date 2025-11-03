@@ -135,6 +135,17 @@ int main(){
       ordenaArquivoSegue(nomeArquivoEntradaSegue, nomeArquivoOrdenadoSegue);
       break;
     case 10:
+      //obtém nome do arquivo de entrada pessoa(bin)
+      nomeArquivoEntradaPessoa = strtok(NULL, " ");
+      //obtém nome do arquivo de índice passado como parâmetro
+      nomeArquivoIndicePessoa = strtok(NULL, " ");
+      //obtém nome do arquivo ordenado de segue
+      nomeArquivoOrdenadoSegue = strtok(NULL, " ");
+      //obtém n que diz quantas vezes a busca vai acontecer
+      parametro = strtok(NULL, " ");
+      int r = atoi(parametro);
+      //chama a funcionalidade 10
+      juncaoArquivos(nomeArquivoEntradaPessoa, nomeArquivoIndicePessoa, nomeArquivoOrdenadoSegue, r);
       break;
     //caso o usuário digite alguma opção que não é de 1 a 10
     default: 
