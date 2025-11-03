@@ -662,8 +662,8 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //Lê o cabeçalho para memória
     cabecalhoPessoa *cabecalho = lerCabecalho(arqPessoa);
     
-    //Carrega o índice em memória
-    fseek(arquivoIndice, 12, SEEK_SET);
+    //Carrega o índice em memória primária
+    fseek(arquivoIndice, 12, SEEK_SET); //pula o cabeçalho
     indice *vetorIndice = malloc(cabecalho->quantidadePessoas * sizeof(indice));
     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);

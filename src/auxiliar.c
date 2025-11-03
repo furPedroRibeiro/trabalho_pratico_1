@@ -588,6 +588,7 @@ void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nom
     }
     
     //Aplica a atualização nos valores
+    int novoId = idPessoa;
     int novoTamNomePessoa = tamNomePessoa;
     int novoTamNomeUsuario = tamNomeUsuario;
     int novaIdadePessoa = idadePessoa;
@@ -596,6 +597,12 @@ void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nom
     
     strcpy(novoNomePessoa, nomePessoa);
     strcpy(novoNomeUsuario, nomeUsuario);
+
+    if(strcmp(nomeCampoAtualiza, "idPessoa") == 0){
+      novoId = atoi(valorCampoAtualiza);
+      int pos = buscaBinariaAtualizar(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
+      vetorIndice[pos].idPessoa = novoId;
+    }
     
     if(strcmp(nomeCampoAtualiza, "idadePessoa") == 0){
         if(strcmp(valorCampoAtualiza, "NULO") == 0){
@@ -628,7 +635,7 @@ void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nom
         fseek(arqPessoa, posRegistro + 5, SEEK_SET); //Pula removido e tamRegistro
         
         //escreve os campos atualizados
-        fwrite(&idPessoa, sizeof(int), 1, arqPessoa);
+        fwrite(&novoId, sizeof(int), 1, arqPessoa);
         fwrite(&novaIdadePessoa, sizeof(int), 1, arqPessoa);
         fwrite(&novoTamNomePessoa, sizeof(int), 1, arqPessoa);
         
@@ -670,7 +677,6 @@ void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nom
                 for(int k = j; k < cabecalho->quantidadePessoas - 1; k++){
                     vetorIndice[k] = vetorIndice[k + 1];
                 }
-                cabecalho->quantidadePessoas--;
                 break;
             }
         }
@@ -684,7 +690,7 @@ void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nom
         char removidoNovo = '0';
         fwrite(&removidoNovo, sizeof(char), 1, arqPessoa);
         fwrite(&novoTamRegistro, sizeof(int), 1, arqPessoa);
-        fwrite(&idPessoa, sizeof(int), 1, arqPessoa);
+        fwrite(&novoId, sizeof(int), 1, arqPessoa);
         fwrite(&novaIdadePessoa, sizeof(int), 1, arqPessoa);
         fwrite(&novoTamNomePessoa, sizeof(int), 1, arqPessoa);
         
@@ -711,7 +717,6 @@ void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nom
         vetorIndice[pos].byteOffset = cabecalho->proxByteoffset;
         
         //atualiza o cabeçalho
-        cabecalho->quantidadePessoas++;
         cabecalho->proxByteoffset += novoTamRegistro + 5;
         
         fflush(arqPessoa);
