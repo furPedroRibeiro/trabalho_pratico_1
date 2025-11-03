@@ -554,7 +554,8 @@ void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
   return;
 }
 
-//FUNCIONALIDADE 7
+
+//FUNÇÕES PARA FUNCIONALIDADE 7:
 
 //função auxiliar para atualizar um registro individual
 void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual){
@@ -729,6 +730,7 @@ int buscaBinariaAtualizar(indice* vetorIndice, int tamanho, int idPessoa){
     return inicio;
 }
 
+
 //FUNÇÕES PARA A FUNCIONALIDADE 8:
 
 void criaCabecalhoArquivoSegue(FILE *arqSegue, char status, int quantidadeRegistros, int proxByteoffset){
@@ -814,65 +816,6 @@ void escreveSegueOrdenado(FILE *arqOrdenado, int sizeArray, noSegue *registros){
     fwrite(&proxRRN, sizeof(int), 1, arqOrdenado);
   }
 }
-
-
-// funções gerais
-char *meu_strsep(char** buffer, const char* delim) {
-    char* inicio = *buffer;
-    char* p;
-    
-    if (inicio == NULL) {
-        return NULL;
-    }
-    
-    p = strpbrk(inicio, delim);
-    
-    if (p) {
-        *p = '\0';
-        *buffer = p + 1;
-    } else {
-        *buffer = NULL;
-    }
-    
-    return inicio;
-}
-
-char *removeEspacosEmBranco(char *campo){
-  // Remove espaços do início
-  while (*campo && isspace((unsigned char)*campo)) {
-    campo++;
-  }
-  // Remove espaços do final
-  int len = strlen(campo);
-  while (len > 0 && isspace((unsigned char)campo[len - 1])) {
-    campo[--len] = '\0';
-  }
-  return campo;
-}
-
-char *removerAspas(char *campo){
-  if(campo == NULL || strlen(campo) < 2 || campo[0] != '"') return campo;
-  
-  int len = strlen(campo); //lê tamanho da string
-  // Se começa com aspas, pula
-  if (campo[0] == '"') {
-    campo++;
-    len--;
-  }
-  
-  // Se termina com aspas, remove
-  if (len > 0 && campo[len-1] == '"') {
-    campo[len-1] = '\0';
-  }
-  
-  return campo;
-}
-
-void defineStatusArquivo(FILE *arquivo, char status){
-  fseek(arquivo, 0, SEEK_SET);  //posiciona ponteiro no byte 0
-  fwrite(&status, sizeof(char), 1, arquivo); //escreve status
-}
-
 
 
 //FUNÇÕES PARA A FUNCIONALIDADE 10:
@@ -966,9 +909,9 @@ void imprimirJuncao(int idPessoa, int idadePessoa, int tamNomePessoa, char *nome
     
     // Imprime dataInicioQueSegue
     if(strcmp(registrosSegue[i].dataInicioQueSegue, "$$$$$$$$$$") == 0){
-      printf("Comecou a seguir em: -\n");
+      printf("Começou a seguir em: -\n");
     } else {
-      printf("Comecou a seguir em: %s\n", registrosSegue[i].dataInicioQueSegue);
+      printf("Começou a seguir em: %s\n", registrosSegue[i].dataInicioQueSegue);
     }
     
     // Imprime dataFimQueSegue
@@ -981,4 +924,62 @@ void imprimirJuncao(int idPessoa, int idadePessoa, int tamNomePessoa, char *nome
     printf("\n");
     i++;
   }
+  printf("\n");
+}
+
+// funções gerais
+char *meu_strsep(char** buffer, const char* delim) {
+    char* inicio = *buffer;
+    char* p;
+    
+    if (inicio == NULL) {
+        return NULL;
+    }
+    
+    p = strpbrk(inicio, delim);
+    
+    if (p) {
+        *p = '\0';
+        *buffer = p + 1;
+    } else {
+        *buffer = NULL;
+    }
+    
+    return inicio;
+}
+
+char *removeEspacosEmBranco(char *campo){
+  // Remove espaços do início
+  while (*campo && isspace((unsigned char)*campo)) {
+    campo++;
+  }
+  // Remove espaços do final
+  int len = strlen(campo);
+  while (len > 0 && isspace((unsigned char)campo[len - 1])) {
+    campo[--len] = '\0';
+  }
+  return campo;
+}
+
+char *removerAspas(char *campo){
+  if(campo == NULL || strlen(campo) < 2 || campo[0] != '"') return campo;
+  
+  int len = strlen(campo); //lê tamanho da string
+  // Se começa com aspas, pula
+  if (campo[0] == '"') {
+    campo++;
+    len--;
+  }
+  
+  // Se termina com aspas, remove
+  if (len > 0 && campo[len-1] == '"') {
+    campo[len-1] = '\0';
+  }
+  
+  return campo;
+}
+
+void defineStatusArquivo(FILE *arquivo, char status){
+  fseek(arquivo, 0, SEEK_SET);  //posiciona ponteiro no byte 0
+  fwrite(&status, sizeof(char), 1, arquivo); //escreve status
 }

@@ -7,7 +7,6 @@
 
 
 //FUNCIONALIDADE 1:
-
 void criarIndice(char *nomeArquivoIndice){
   //caminho onde os binário devem ser criados:
   char caminho[100] = "./";
@@ -35,7 +34,6 @@ void criarIndice(char *nomeArquivoIndice){
   //usa binario na tela como especificado no trabalho
   binarioNaTela(nomeArquivoIndice);
 }
-
 
 //FUNCIONALIDADE 2:
 void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoDados, char *nomeArquivoIndice){
@@ -106,9 +104,7 @@ void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoDados, char *n
     binarioNaTela(nomeArquivoIndice);
 }
 
-
 //FUNCIONALIDADE 3:
-
 //Definição da variável global
 struct registro_2 reg;
 
@@ -168,8 +164,7 @@ void listarRegistros(char *nomeArquivoEntrada){
     fclose(arqPessoa);
 }
 
-
-//Funcionalidade 4
+//FUNCIONALIDADE 4:
 void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //abertura dos arquivos
     char caminho[100] = "./";
@@ -296,7 +291,7 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     fclose(arqPessoa);
 }
 
-//Funcionalidade 5
+//FUNCIONALIDADE 5:
 void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //Abertura dos arquivos
     FILE *arqPessoa = fopen(nomeArquivoPessoa, "rb+");
@@ -556,8 +551,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     binarioNaTela(nomeArquivoIndice);
 }
 
-
-//FUNCIONALIDADE 6
+//FUNCIONALIDADE 6:
 void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //a inserção será feita no final do arquivo, mas precisamos atualizar também o cabeçalho, então o arquivo será aberto com rb+
     FILE *arqDados = fopen(nomeArquivoPessoa, "rb+");
@@ -629,7 +623,7 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
     binarioNaTela(nomeArquivoIndice);
 }
 
-//FUNCIONALIDADE 7
+//FUNCIONALIDADE 7:
 void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //Abertura dos arquivos
     FILE *arqPessoa = fopen(nomeArquivoPessoa, "rb+");
@@ -871,7 +865,6 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     binarioNaTela(nomeArquivoIndice);
 }
 
-
 // FUNCIONALIDADE 8:
 void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue){
     //para cada linha lida no arquivo csv, temos uma inserção no arquivo segue
@@ -1014,7 +1007,6 @@ void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue
 
     binarioNaTela(nomeArquivoSaidaSegue);
 }
-
 
 //FUNCIONALIDADE 9:
 void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado){
