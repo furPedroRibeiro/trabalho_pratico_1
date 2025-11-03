@@ -574,19 +574,12 @@ void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nom
     fread(&idPessoa, sizeof(int), 1, arqPessoa);
     fread(&idadePessoa, sizeof(int), 1, arqPessoa);
     fread(&tamNomePessoa, sizeof(int), 1, arqPessoa);
-    
-    if(tamNomePessoa > 0){
-        fread(nomePessoa, sizeof(char), tamNomePessoa, arqPessoa);
-        nomePessoa[tamNomePessoa] = '\0';
-    }
-    
+    fread(nomePessoa, sizeof(char), tamNomePessoa, arqPessoa);
+    nomePessoa[tamNomePessoa] = '\0';
     fread(&tamNomeUsuario, sizeof(int), 1, arqPessoa);
-    
-    if(tamNomeUsuario > 0){
-        fread(nomeUsuario, sizeof(char), tamNomeUsuario, arqPessoa);
-        nomeUsuario[tamNomeUsuario] = '\0';
-    }
-    
+    fread(nomeUsuario, sizeof(char), tamNomeUsuario, arqPessoa);
+    nomeUsuario[tamNomeUsuario] = '\0';
+
     //Aplica a atualização nos valores
     int novoId = idPessoa;
     int novoTamNomePessoa = tamNomePessoa;
@@ -638,16 +631,9 @@ void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nom
         fwrite(&novoId, sizeof(int), 1, arqPessoa);
         fwrite(&novaIdadePessoa, sizeof(int), 1, arqPessoa);
         fwrite(&novoTamNomePessoa, sizeof(int), 1, arqPessoa);
-        
-        if(novoTamNomePessoa > 0){
-            fwrite(novoNomePessoa, sizeof(char), novoTamNomePessoa, arqPessoa);
-        }
-        
+        fwrite(novoNomePessoa, sizeof(char), novoTamNomePessoa, arqPessoa);
         fwrite(&novoTamNomeUsuario, sizeof(int), 1, arqPessoa);
-        
-        if(novoTamNomeUsuario > 0){
-            fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
-        }
+        fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
         
         //preenche o resto com lixo '$'
         int bytesEscritos = 16 + novoTamNomePessoa + novoTamNomeUsuario;
@@ -693,16 +679,10 @@ void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nom
         fwrite(&novoId, sizeof(int), 1, arqPessoa);
         fwrite(&novaIdadePessoa, sizeof(int), 1, arqPessoa);
         fwrite(&novoTamNomePessoa, sizeof(int), 1, arqPessoa);
-        
-        if(novoTamNomePessoa > 0){
-            fwrite(novoNomePessoa, sizeof(char), novoTamNomePessoa, arqPessoa);
-        }
+        fwrite(novoNomePessoa, sizeof(char), novoTamNomePessoa, arqPessoa);
         
         fwrite(&novoTamNomeUsuario, sizeof(int), 1, arqPessoa);
-        
-        if(novoTamNomeUsuario > 0){
-            fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
-        }
+        fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
         
         //adiciona ao índice na posição ordenada correta
         int pos = buscaBinariaAtualizar(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
@@ -891,4 +871,114 @@ char *removerAspas(char *campo){
 void defineStatusArquivo(FILE *arquivo, char status){
   fseek(arquivo, 0, SEEK_SET);  //posiciona ponteiro no byte 0
   fwrite(&status, sizeof(char), 1, arquivo); //escreve status
+}
+
+
+
+//FUNÇÕES PARA A FUNCIONALIDADE 10:
+//Busca binária modificada que retorna a primeira ocorrência do idPessoaQueSegue
+int64_t buscaBinariaSegueModificada(noSegue *registros, int tamanho, int idPessoaBuscado){
+  if(tamanho == 0) return -1;
+  
+  int inicio = 0;
+  int fim = tamanho - 1;
+  int resultado = -1;
+  
+  //Busca binária
+  while(inicio <= fim){
+    int meio = inicio + (fim - inicio) / 2;
+    
+    if(registros[meio].idPessoaQueSegue == idPessoaBuscado){
+      resultado = meio;
+      //continua buscando para a esquerda para achar a primeira ocorrência
+      fim = meio - 1;
+    }
+    else if(registros[meio].idPessoaQueSegue < idPessoaBuscado){
+      inicio = meio + 1;
+    }
+    else{
+      fim = meio - 1;
+    }
+  }
+  
+  return resultado;
+}
+
+//função auxiliar para converter grau de amizade em string
+char* interpretaGrauAmizade(char grau){
+  if(grau == '0'){
+    return "celebridade";
+  }
+  if(grau == '1'){
+    return "amiga de minha amiga";
+  }
+  if(grau == '2'){
+    return "minha amiga";
+  }
+  return "-";
+}
+
+//Função para imprimir a junção completa
+void imprimirJuncao(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario, noSegue *registrosSegue, int tamanhoSegue, int idPessoaBuscado){
+    
+  //Imprime os dados da pessoa
+  printf("Dados da pessoa de codigo %d\n", idPessoa);
+  
+  if(tamNomePessoa > 0){
+    printf("Nome: %s\n", nomePessoa);
+  } else{
+    printf("Nome: -\n");
+  }
+  
+  if(idadePessoa == -1){
+    printf("Idade: -\n");
+  } else{
+    printf("Idade: %d\n", idadePessoa);
+  }
+  
+  if(tamNomeUsuario > 0){
+    printf("Usuario: %s\n", nomeUsuario);
+  } else {
+    printf("Usuario: -\n");
+  }
+  
+  printf("\n");
+  
+  //Busca binária modificada para encontrar a primeira ocorrência
+  int64_t posicaoInicial = buscaBinariaSegueModificada(registrosSegue, tamanhoSegue, idPessoaBuscado);
+  
+  // Se não encontrou nenhum registro de segue, retorna
+  if(posicaoInicial == -1){
+    return;
+  }
+  
+  // Percorre todos os registros com o mesmo idPessoaQueSegue
+  int i = posicaoInicial;
+  while(i < tamanhoSegue && registrosSegue[i].idPessoaQueSegue == idPessoaBuscado){
+    // Pula registros removidos
+    if(registrosSegue[i].removido[0] == '1'){
+      i++;
+      continue;
+    }
+    
+    printf("Segue a pessoa de codigo: %d\n", registrosSegue[i].idPessoaQueESeguida);
+    printf("Justificativa para seguir: %s\n", interpretaGrauAmizade(registrosSegue[i].grauAmizade[0]));
+    
+    // Imprime dataInicioQueSegue
+    if(strcmp(registrosSegue[i].dataInicioQueSegue, "$$$$$$$$$$") == 0){
+      printf("Comecou a seguir em: -\n");
+    } else {
+      printf("Comecou a seguir em: %s\n", registrosSegue[i].dataInicioQueSegue);
+    }
+    
+    // Imprime dataFimQueSegue
+    if(strcmp(registrosSegue[i].dataFimQueSegue, "$$$$$$$$$$") == 0){
+      printf("Parou de seguir em: -\n");
+    } else {
+      printf("Parou de seguir em: %s\n", registrosSegue[i].dataFimQueSegue);
+    }
+    
+    printf("\n");
+    i++;
+  }
 }

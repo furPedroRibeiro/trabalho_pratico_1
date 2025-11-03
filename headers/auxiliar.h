@@ -132,6 +132,10 @@ void insereArquivoSegue(FILE *arqSegue, noSegue *noAtual);
 int comparaParaOrdenar(const void *a, const void *b);
 void escreveSegueOrdenado(FILE *arqOrdenado, int sizeArray, noSegue *registros);
 
+//Funções para funcionalidade 10
+int64_t buscaBinariaSegueModificada(noSegue *registros, int tamanho, int idPessoaBuscado);
+void imprimirJuncao(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario, noSegue *registrosSegue, int tamanhoSegue, int idPessoaBuscado);
+
 
 //funções de uso geral
 int buscaBinariaVetorIndice(noIndice* indices, int tamanho, int idPessoa);

@@ -35,4 +35,7 @@ void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue
 //funcionalidade 9:
 void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado);
 
+//funcionalidade 10:
+void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nomeArquivoOrdenado, int n);
+
 #endif
