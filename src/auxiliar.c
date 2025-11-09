@@ -294,6 +294,26 @@ void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, int6
 
 
 //funções para as funcionalidades 3 e 4
+
+// Função genérica para abrir arquivo, verificar erro e checar status
+FILE* abrirArquivoComStatus(const char *nomeArquivo, const char *modo) {
+    FILE *arquivo = fopen(nomeArquivo, modo);
+    if (arquivo == NULL) {
+        puts("Falha no processamento do arquivo.");
+        return NULL;
+    }
+
+    char status;
+    if (fread(&status, sizeof(char), 1, arquivo) != 1 || status != '1') {
+        puts("Falha no processamento do arquivo.");
+        fclose(arquivo);
+        return NULL;
+    }
+
+    // Ponteiro do arquivo agora está após o byte do status
+    return arquivo;
+}
+
 // Funcao auxiliar para imprimir um registro
 void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario){
   printf("Dados da pessoa de codigo %d\n", idPessoa);

@@ -73,6 +73,7 @@ void criarNoRegistro(registro* novoRegistro, char *campoIdPessoa, char *campoIda
 void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, int64_t byteoffset);
 
 //funções para as funcionalidade 3 e 4
+FILE* abrirArquivoComStatus(const char *nomeArquivo, const char *modo);
 void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario);
 //busca binaria para encontrar o byteOffset do registro com o id buscado
 int64_t buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado);

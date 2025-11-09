@@ -111,23 +111,9 @@ struct registro_2 reg;
 //FUNCIONALIDADE 3:
 void listarRegistros(char *nomeArquivoEntrada){
     // abrindo o caminho em que o arquivo está
-    char caminho_2[100] = "./";
-    strcat(caminho_2, nomeArquivoEntrada);
-    FILE *arqPessoa = fopen(caminho_2, "rb");
+    FILE *arqPessoa = abrirArquivoComStatus(nomeArquivoEntrada, "rb");
 
     if (arqPessoa == NULL){
-        puts("Falha no processamento do arquivo.");
-        return;
-    }
-
-    //Leitura do cabeçalho do arquivo binário - leitura do status
-    //criação de variáveis para armazenar cabeçalho
-    char status;
-    //lendo status
-    if (fread(&status, sizeof(char), 1, arqPessoa) != '1'){
-        // Se o status for diferente de 1 o arquivo de dados está inconsistente
-        puts("Falha no processamento do arquivo");
-        fclose(arqPessoa);
         return;
     }
     // Tamanho do arquivo
@@ -167,37 +153,13 @@ void listarRegistros(char *nomeArquivoEntrada){
 //FUNCIONALIDADE 4:
 void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //abertura dos arquivos
-    char caminho[100] = "./";
-    strcat(caminho, nomeArquivoPessoa);
-    FILE *arqPessoa = fopen(caminho, "rb");
+    FILE *arqPessoa = abrirArquivoComStatus(nomeArquivoPessoa, "rb");
+    FILE *arquivoIndice = abrirArquivoComStatus(nomeArquivoIndice, "rb");
 
-    char caminho_2[100] = "./";
-    strcat(caminho_2, nomeArquivoIndice);
-    FILE *arquivoIndice = fopen(caminho_2, "rb");
-
-    if(arqPessoa == NULL || arquivoIndice == NULL){
-        puts("Falha no processamento do arquivo.");
+    if (arqPessoa == NULL || arquivoIndice == NULL) {
         return;
     }
 
-    //leitura do status dos arquivos
-    char statusPessoa, statusIndice;
-    //Leitura do status do arquivo pessoa
-    if(fread(&statusPessoa, sizeof(statusPessoa), 1, arqPessoa) != 1 || statusPessoa != '1'){
-        // Se o status for diferente de 1 o arquivo de dados está inconsistente
-        puts("Falha no processamento do arquivo");
-        fclose(arqPessoa);
-        fclose(arquivoIndice);
-        return;
-    }
-    //leitura do status do arquivo de indice
-    if(fread(&statusIndice, sizeof(statusIndice), 1, arquivoIndice) != 1 || statusIndice != '1'){
-        // Se o status for diferente de 1 o arquivo de dados está inconsistente
-        puts("Falha no processamento do arquivo");
-        fclose(arquivoIndice);
-        fclose(arqPessoa);
-        return;
-    }
     //carrega o arquivo de índice em um vetor
     fseek(arquivoIndice, 0, SEEK_END);
     long sizeIndice = ftell(arquivoIndice) - 12; // remove os bytes do cabeçalho
@@ -257,29 +219,13 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
 //FUNCIONALIDADE 5:
 void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //Abertura dos arquivos
-    FILE *arqPessoa = fopen(nomeArquivoPessoa, "rb+");
-    FILE *arquivoIndice = fopen(nomeArquivoIndice, "rb+");
+    FILE *arqPessoa = abrirArquivoComStatus(nomeArquivoPessoa, "rb+");
+    FILE *arquivoIndice = abrirArquivoComStatus(nomeArquivoIndice, "rb+");
     
     if(arqPessoa == NULL || arquivoIndice == NULL){
-        puts("Falha no processamento do arquivo.");
         return;
     }
-    
-    //Leitura do status dos arquivos, se tiver inconsistente, o programa da erro e retorna
-    char statusPessoa, statusIndice;
-    if(fread(&statusPessoa, sizeof(char), 1, arqPessoa) != 1 || statusPessoa != '1'){
-        puts("Falha no processamento do arquivo.");
-        fclose(arqPessoa);
-        fclose(arquivoIndice);
-        return;
-    }
-    if(fread(&statusIndice, sizeof(char), 1, arquivoIndice) != 1 || statusIndice != '1'){
-        puts("Falha no processamento do arquivo.");
-        fclose(arqPessoa);
-        fclose(arquivoIndice);
-        return;
-    }
-    
+
     //Marca os arquivos como inconsistentes durante a operação
     defineStatusArquivo(arqPessoa, '0');
     defineStatusArquivo(arquivoIndice, '0');
@@ -381,6 +327,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     }
     
     // Escreve o cabeçalho do índice
+    char statusIndice;
     statusIndice = '0';
     fseek(arquivoIndice, 0, SEEK_SET);
     fwrite(&statusIndice, sizeof(char), 1, arquivoIndice);
@@ -484,26 +431,10 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
 //FUNCIONALIDADE 7:
 void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //Abertura dos arquivos
-    FILE *arqPessoa = fopen(nomeArquivoPessoa, "rb+");
-    FILE *arquivoIndice = fopen(nomeArquivoIndice, "rb+");
+    FILE *arqPessoa = abrirArquivoComStatus(nomeArquivoPessoa, "rb+");
+    FILE *arquivoIndice = abrirArquivoComStatus(nomeArquivoIndice, "rb+");
     
     if(arqPessoa == NULL || arquivoIndice == NULL){
-        puts("Falha no processamento do arquivo.");
-        return;
-    }
-    
-    //Leitura do status dos arquivos
-    char statusPessoa, statusIndice;
-    if(fread(&statusPessoa, sizeof(char), 1, arqPessoa) != 1 || statusPessoa != '1'){
-        puts("Falha no processamento do arquivo.");
-        fclose(arqPessoa);
-        fclose(arquivoIndice);
-        return;
-    }
-    if(fread(&statusIndice, sizeof(char), 1, arquivoIndice) != 1 || statusIndice != '1'){
-        puts("Falha no processamento do arquivo.");
-        fclose(arqPessoa);
-        fclose(arquivoIndice);
         return;
     }
     
@@ -543,7 +474,7 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         
 
         //unicas mudanças que são feitas para modularização
-        //USA A FUNÇÃO MODULARIZADA buscarRegistrosPorCampo
+        //usa a função de busca - buscarRegistrosPorCampo
         resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, cabecalho->quantidadePessoas, sizeDados, nomeCampoBusca, valorCampoBusca);
         
         //Processa todos os registros encontrados
@@ -566,7 +497,8 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
             liberarListaResultados(resultados);
         }
     }
-    
+    // a mudança pós a modulariação foi até aqui
+
     //reescreve o arquivo de índice
     fclose(arquivoIndice);
     remove(nomeArquivoIndice);
@@ -581,6 +513,7 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     }
     
     //escreve o cabeçalho do índice
+    char statusIndice;
     statusIndice = '0';
     fseek(arquivoIndice, 0, SEEK_SET);
     fwrite(&statusIndice, sizeof(char), 1, arquivoIndice);
@@ -848,50 +781,14 @@ void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado)
 //FUNCIONALIDADE 10
 void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nomeArquivoOrdenado, int n){
     //Abertura dos arquivos
-    char caminho[100] = "./";
-    strcat(caminho, nomeArquivoPessoa);
-    FILE *arqPessoa = fopen(caminho, "rb");
-    
-    char caminho_2[100] = "./";
-    strcat(caminho_2, nomeArquivoIndice);
-    FILE *arquivoIndice = fopen(caminho_2, "rb");
-    
-    char caminho_3[100] = "./";
-    strcat(caminho_3, nomeArquivoOrdenado);
-    FILE *arqOrdenado = fopen(caminho_3, "rb");
+    FILE *arqPessoa = abrirArquivoComStatus(nomeArquivoPessoa, "rb");
+    FILE *arquivoIndice = abrirArquivoComStatus(nomeArquivoIndice, "rb");
+    FILE *arqOrdenado = abrirArquivoComStatus(nomeArquivoOrdenado, "rb");
     
     if(arqPessoa == NULL || arquivoIndice == NULL || arqOrdenado == NULL){
-        puts("Falha no processamento do arquivo.");
-        if(arqPessoa) fclose(arqPessoa);
-        if(arquivoIndice) fclose(arquivoIndice);
-        if(arqOrdenado) fclose(arqOrdenado);
         return;
     }
-    
-    // Verifica status dos arquivos
-    char statusPessoa, statusIndice, statusOrdenado;
-    if(fread(&statusPessoa, sizeof(char), 1, arqPessoa) != 1 || statusPessoa != '1'){
-        puts("Falha no processamento do arquivo.");
-        fclose(arqPessoa);
-        fclose(arquivoIndice);
-        fclose(arqOrdenado);
-        return;
-    }
-    if(fread(&statusIndice, sizeof(char), 1, arquivoIndice) != 1 || statusIndice != '1'){
-        puts("Falha no processamento do arquivo.");
-        fclose(arqPessoa);
-        fclose(arquivoIndice);
-        fclose(arqOrdenado);
-        return;
-    }
-    if(fread(&statusOrdenado, sizeof(char), 1, arqOrdenado) != 1 || statusOrdenado != '1'){
-        puts("Falha no processamento do arquivo.");
-        fclose(arqPessoa);
-        fclose(arquivoIndice);
-        fclose(arqOrdenado);
-        return;
-    }
-    
+
     //Carrega o índice em memória
     fseek(arquivoIndice, 0, SEEK_END);
     long sizeIndice = ftell(arquivoIndice) - 12;
