@@ -183,20 +183,21 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //leitura do status dos arquivos
     char statusPessoa, statusIndice;
     //Leitura do status do arquivo pessoa
-    if (fread(&statusPessoa, sizeof(statusPessoa), 1, arqPessoa) != 1){
+    if(fread(&statusPessoa, sizeof(statusPessoa), 1, arqPessoa) != 1 || statusPessoa != '1'){
         // Se o status for diferente de 1 o arquivo de dados está inconsistente
         puts("Falha no processamento do arquivo");
         fclose(arqPessoa);
-        return;
-    }
-    //leitura do status do arquivo de indice
-    if (fread(&statusIndice, sizeof(statusIndice), 1, arquivoIndice) != 1){
-        // Se o status for diferente de 1 o arquivo de dados está inconsistente
-        puts("Falha no processamento do arquivo");
         fclose(arquivoIndice);
         return;
     }
-
+    //leitura do status do arquivo de indice
+    if(fread(&statusIndice, sizeof(statusIndice), 1, arquivoIndice) != 1 || statusIndice != '1'){
+        // Se o status for diferente de 1 o arquivo de dados está inconsistente
+        puts("Falha no processamento do arquivo");
+        fclose(arquivoIndice);
+        fclose(arqPessoa);
+        return;
+    }
     //carrega o arquivo de índice em um vetor
     fseek(arquivoIndice, 0, SEEK_END);
     long sizeIndice = ftell(arquivoIndice) - 12; // remove os bytes do cabeçalho
@@ -225,7 +226,6 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     for(int i = 0; i < n; i++){
         int entrada;
         char nomeCampo[100], valorCampo[100];
-        int find = 0;
 
         //le a linha de busca no formato: número nomeCampo=valorCampo
         scanf("%d", &entrada);
@@ -233,60 +233,23 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         getchar();
         scan_quote_string(valorCampo);
 
-        //caso 1:busca por idPessoa usando indice
-        if(strcmp(nomeCampo, "idPessoa") == 0){
-            int idBusca = atoi(valorCampo);
-            int64_t offset = buscaBinariaIndice(vetorIndice, qtdIndice, idBusca);
-            if(offset != -1){
-                imprimirRegistroPorByteOffset(arqPessoa, offset, reg);
-                find = 1;
-            }
+        //executa a busca e obtém a lista de resultados
+        resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, qtdIndice, sizeDados, nomeCampo, valorCampo);
+        //nenhum registro encontrado
+        if (resultados == NULL) {
+            printf("Registro inexistente.\n\n");
         } 
-        //caso 2:busca sequencial por outros campos
-        else {
-
-            fseek(arqPessoa, 17, SEEK_SET); // pula o cabeçalho
-
-            while(ftell(arqPessoa) < sizeDados){
-                char removido;
-                fread(&removido, sizeof(char), 1, arqPessoa);
-                
-                int tamRegistro;
-                fread(&tamRegistro, sizeof(int), 1, arqPessoa);
-                
-                //pula os registros removidos
-                if(removido == '1'){
-                    fseek(arqPessoa, tamRegistro, SEEK_CUR);
-                    continue;
-                }
-
-                //leitura dos campos do registro
-                fread(&reg.idPessoa, sizeof(int), 1, arqPessoa);
-                fread(&reg.idadePessoa, sizeof(int), 1, arqPessoa);
-                fread(&reg.tamNomePessoa, sizeof(int), 1, arqPessoa);
-                if(reg.tamNomePessoa > 0){
-                    fread(reg.nomePessoa, sizeof(char), reg.tamNomePessoa, arqPessoa);
-                    reg.nomePessoa[reg.tamNomePessoa] = '\0';
-                } else {
-                    reg.nomePessoa[0] = '\0';
-                }
-                fread(&reg.tamNomeUsuario, sizeof(int), 1, arqPessoa);
-                fread(reg.nomeUsuario, sizeof(char), reg.tamNomeUsuario, arqPessoa);
-                reg.nomeUsuario[reg.tamNomeUsuario] = '\0';
-
-                if ((strcmp(nomeCampo, "idadePessoa") == 0 && reg.idadePessoa == atoi(valorCampo)) ||
-                    (strcmp(nomeCampo, "nomePessoa") == 0 && strcmp(reg.nomePessoa, valorCampo) == 0) ||
-                    (strcmp(nomeCampo, "nomeUsuario") == 0 && strcmp(reg.nomeUsuario, valorCampo) == 0)) {
-                    imprimirRegistro(reg.idPessoa, reg.idadePessoa, reg.tamNomePessoa, reg.nomePessoa, reg.tamNomeUsuario, reg.nomeUsuario);
-                    find = 1;
-            }
+        // Imprime todos os registros encontrados
+        else{
+            resultadoBusca *atual = resultados;
+            while(atual != NULL){
+                imprimirRegistro(atual->idPessoa, atual->idadePessoa, atual->tamNomePessoa, atual->nomePessoa, atual->tamNomeUsuario, atual->nomeUsuario);
+                atual = atual->proxResultado;
             }
         }
-        if(find == 0){
-        printf("Registro inexistente.\n\n");
-        }
+        //libera memória da lista
+        liberarListaResultados(resultados);
     }
-
     free(vetorIndice);
     fclose(arqPessoa);
 }
@@ -336,7 +299,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
         fread(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
     }
-    
+
     //Vetor para marcar IDs que devem ser removidos
     int *idsParaRemover = malloc(cabecalho->quantidadePessoas * sizeof(int));
     int qtdIdsParaRemover = 0;
@@ -349,145 +312,39 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     for(int i = 0; i < n; i++){
         int entrada;
         char nomeCampo[100], valorCampo[100];
-        int encontrou = 0;
         
         //Lê a linha de busca
         scanf("%d", &entrada);
         scanf(" %[^=]", nomeCampo);
         getchar(); // Consome o '='
+        scan_quote_string(valorCampo);
         
-        //verifica se o valor tem aspas ou não
-        char c = getchar();
-        if(c == '"'){
-            //Valor entre aspas - lê até a próxima aspa
-            int j = 0;
-            while((c = getchar()) != '"' && c != '\n' && c != EOF){
-                valorCampo[j++] = c;
-            }
-            valorCampo[j] = '\0';
-        } else {
-            //Valor sem aspas - lê até o fim da linha
-            valorCampo[0] = c;
-            int j = 1;
-            while((c = getchar()) != '\n' && c != EOF){
-                valorCampo[j++] = c;
-            }
-            valorCampo[j] = '\0';
-        }
+
+        //somente aqui muda na modularização, mas não está funcionando
+        //usa a função de busca buscarRegistrosPorCampo
+        resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, cabecalho->quantidadePessoas, sizeDados, nomeCampo, valorCampo);
         
-        //Caso 1: Busca por idPessoa usando índice
-        if(strcmp(nomeCampo, "idPessoa") == 0){
-            int idBusca = atoi(valorCampo);
-            int64_t offset = buscaBinariaIndice(vetorIndice, cabecalho->quantidadePessoas, idBusca);
-            
-            if(offset != -1){
+        //Processa todos os registros encontrados
+        if(resultados != NULL){
+            resultadoBusca *atual = resultados;
+            while(atual != NULL){
                 //marca o registro como removido no arquivo de dados
-                fseek(arqPessoa, offset, SEEK_SET);
+                fseek(arqPessoa, atual->byteOffset, SEEK_SET);
                 char removido = '1';
                 fwrite(&removido, sizeof(char), 1, arqPessoa);
                 fflush(arqPessoa);
                 
                 //adiciona o ID à lista de IDs para remover
-                idsParaRemover[qtdIdsParaRemover++] = idBusca;
-                encontrou = 1;
+                idsParaRemover[qtdIdsParaRemover++] = atual->idPessoa;
+                
+                atual = atual->proxResultado;
             }
-        }
-        //Caso 2: Busca sequencial por outros campos
-        else {
-            fseek(arqPessoa, 17, SEEK_SET);
             
-            while(ftell(arqPessoa) < sizeDados){
-                int64_t posRegistro = ftell(arqPessoa);
-                char removido;
-                int tamRegistro;
-                
-                //Lê o byte de removido e tamanho do registro
-                fread(&removido, sizeof(char), 1, arqPessoa);
-                fread(&tamRegistro, sizeof(int), 1, arqPessoa);
-                
-                //Calcula a posição do próximo registro
-                int64_t proxPosRegistro = posRegistro + 5 + tamRegistro;
-                
-                //Pula os registros já removidos
-                if(removido == '1'){
-                    fseek(arqPessoa, proxPosRegistro, SEEK_SET);
-                    continue;
-                }
-                
-                //Leitura dos campos do registro
-                int idPessoa, idadePessoa, tamNomePessoa, tamNomeUsuario;
-                char nomePessoa[100] = "";
-                char nomeUsuario[100] = "";
-                
-                fread(&idPessoa, sizeof(int), 1, arqPessoa);
-                fread(&idadePessoa, sizeof(int), 1, arqPessoa);
-                fread(&tamNomePessoa, sizeof(int), 1, arqPessoa);
-                fread(nomePessoa, sizeof(char), tamNomePessoa, arqPessoa);
-                nomePessoa[tamNomePessoa] = '\0';
-                
-                fread(&tamNomeUsuario, sizeof(int), 1, arqPessoa);
-                fread(nomeUsuario, sizeof(char), tamNomeUsuario, arqPessoa);
-                nomeUsuario[tamNomeUsuario] = '\0';
-                
-                // Verifica se o registro satisfaz o critério de busca
-
-                int registroEncontrado = 0;
-                
-                if(strcmp(nomeCampo, "idadePessoa") == 0){
-                    if(strcmp(valorCampo, "NULO") == 0){
-                        if(idadePessoa == -1){
-                            registroEncontrado = 1;
-                        }
-                    } else {
-                        if(idadePessoa == atoi(valorCampo)){
-                            registroEncontrado = 1;
-                        }
-                    }
-                }
-                else if(strcmp(nomeCampo, "nomePessoa") == 0){
-                    if(strcmp(valorCampo, "NULO") == 0){
-                        if(tamNomePessoa == 0){
-                            registroEncontrado = 1;
-                        }
-                    } else {
-                        if(strcmp(nomePessoa, valorCampo) == 0){
-                            registroEncontrado = 1;
-                        }
-                    }
-                }
-                else if(strcmp(nomeCampo, "nomeUsuario") == 0){
-                    if(strcmp(valorCampo, "NULO") == 0){
-                        if(tamNomeUsuario == 0){
-                            registroEncontrado = 1;
-                        }
-                    } else {
-                        if(strcmp(nomeUsuario, valorCampo) == 0){
-                            registroEncontrado = 1;
-                        }
-                    }
-                }
-                
-                if(registroEncontrado == 1){
-                    // Marca o registro como removido
-                    fseek(arqPessoa, posRegistro, SEEK_SET);
-                    char marcaRemovido = '1';
-                    fwrite(&marcaRemovido, sizeof(char), 1, arqPessoa);
-                    fflush(arqPessoa);
-            
-                    // Adiciona o ID à lista de IDs para remover
-                    idsParaRemover[qtdIdsParaRemover++] = idPessoa;
-                    encontrou = 1;
-                }
-                
-                // Reposiciona para o próximo registro
-                fseek(arqPessoa, proxPosRegistro, SEEK_SET);
-            }
+            //Libera a lista de resultados
+            liberarListaResultados(resultados);
         }
-        
-        // if(encontrou == 0){
-        //     printf("Registro inexistente.\n");
-        // }
     }
+    //até aqui, o resto é tudo a mesma coisa
     
     // Remove todos os IDs marcados do vetor de índices
     for(int i = 0; i < qtdIdsParaRemover; i++){
@@ -550,6 +407,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     binarioNaTela(nomeArquivoPessoa);
     binarioNaTela(nomeArquivoIndice);
 }
+
 
 //FUNCIONALIDADE 6:
 void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
@@ -677,146 +535,35 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         scanf("%d", &entrada);
         scanf(" %[^=]", nomeCampoBusca);
         getchar(); // Consome o '='
-        
-        //verifica se o valor tem aspas ou não
-        char c = getchar();
-        if(c == '"'){
-            //Valor entre aspas - lê até a próxima aspa
-            int j = 0;
-            while((c = getchar()) != '"' && c != '\n' && c != EOF){
-                valorCampoBusca[j++] = c;
-            }
-            valorCampoBusca[j] = '\0';
-        } else {
-            //Valor sem aspas - lê até o espaço ou fim da linha
-            valorCampoBusca[0] = c;
-            int j = 1;
-            while((c = getchar()) != ' ' && c != '\n' && c != EOF){
-                valorCampoBusca[j++] = c;
-            }
-            valorCampoBusca[j] = '\0';
-        }
+        scan_quote_string(valorCampoBusca);
         
         scanf(" %[^=]", nomeCampoAtualiza);
         getchar(); // Consome o '='
+        scan_quote_string(valorCampoAtualiza);
         
-        //verifica se o valor tem aspas ou não (campo de atualização)
-        c = getchar();
-        if(c == '"'){
-            //Valor entre aspas - lê até a próxima aspa
-            int j = 0;
-            while((c = getchar()) != '"' && c != '\n' && c != EOF){
-                valorCampoAtualiza[j++] = c;
-            }
-            valorCampoAtualiza[j] = '\0';
-        } else {
-            //Valor sem aspas - lê até o fim da linha
-            valorCampoAtualiza[0] = c;
-            int j = 1;
-            while((c = getchar()) != '\n' && c != EOF){
-                valorCampoAtualiza[j++] = c;
-            }
-            valorCampoAtualiza[j] = '\0';
-        }
+
+        //unicas mudanças que são feitas para modularização
+        //USA A FUNÇÃO MODULARIZADA buscarRegistrosPorCampo
+        resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, cabecalho->quantidadePessoas, sizeDados, nomeCampoBusca, valorCampoBusca);
         
-        //processa cada registro que satisfaz o critério de busca
-        if(strcmp(nomeCampoBusca, "idPessoa") == 0){
-            // Busca por idPessoa usando índice
-            int idBusca = atoi(valorCampoBusca);
-            int64_t offset = buscaBinariaIndice(vetorIndice, cabecalho->quantidadePessoas, idBusca);
-            
-            if(offset != -1){
-                atualizarRegistroIndividual(arqPessoa, offset, nomeCampoAtualiza, valorCampoAtualiza, cabecalho, vetorIndice, idBusca);
+        //Processa todos os registros encontrados
+        if(resultados != NULL){
+            resultadoBusca *atual = resultados;
+            while(atual != NULL){
+                //atualiza o registro individual
+                atualizarRegistroIndividual(arqPessoa, atual->byteOffset, nomeCampoAtualiza, valorCampoAtualiza, cabecalho, vetorIndice, atual->idPessoa);
                 
                 // Atualiza sizeDados após atualização
                 int64_t posAtual = ftell(arqPessoa);
                 fseek(arqPessoa, 0, SEEK_END);
                 sizeDados = ftell(arqPessoa);
                 fseek(arqPessoa, posAtual, SEEK_SET);
+                
+                atual = atual->proxResultado;
             }
-        } else {
-            //busca sequencial por outros campos
-            fseek(arqPessoa, 17, SEEK_SET);
             
-            while(ftell(arqPessoa) < sizeDados){
-                int64_t posRegistro = ftell(arqPessoa);
-                char removido;
-                int tamRegistro;
-                
-                fread(&removido, sizeof(char), 1, arqPessoa);
-                fread(&tamRegistro, sizeof(int), 1, arqPessoa);
-                
-                int64_t proxPosRegistro = posRegistro + 5 + tamRegistro;
-                
-                if(removido == '1'){
-                    fseek(arqPessoa, proxPosRegistro, SEEK_SET);
-                    continue;
-                }
-                
-                //lê os campos do registro
-                int idPessoa, idadePessoa, tamNomePessoa, tamNomeUsuario;
-                char nomePessoa[100] = "";
-                char nomeUsuario[100] = "";
-                
-                fread(&idPessoa, sizeof(int), 1, arqPessoa);
-                fread(&idadePessoa, sizeof(int), 1, arqPessoa);
-                fread(&tamNomePessoa, sizeof(int), 1, arqPessoa);
-                fread(nomePessoa, sizeof(char), tamNomePessoa, arqPessoa);
-                nomePessoa[tamNomePessoa] = '\0';
-                
-                fread(&tamNomeUsuario, sizeof(int), 1, arqPessoa);
-                fread(nomeUsuario, sizeof(char), tamNomeUsuario, arqPessoa);
-                nomeUsuario[tamNomeUsuario] = '\0';
-                
-                //verifica se o registro satisfaz o critério de busca
-                int registroEncontrado = 0;
-                
-                if(strcmp(nomeCampoBusca, "idadePessoa") == 0){
-                    if(strcmp(valorCampoBusca, "NULO") == 0){
-                        if(idadePessoa == -1){ 
-                            registroEncontrado = 1;
-                        }
-                    } else {
-                        if(idadePessoa == atoi(valorCampoBusca)){ 
-                            registroEncontrado = 1;
-                        }
-                    }
-                }
-                else if(strcmp(nomeCampoBusca, "nomePessoa") == 0){
-                    if(strcmp(valorCampoBusca, "NULO") == 0){
-                        if(tamNomePessoa == 0){ 
-                            registroEncontrado = 1;
-                        }
-                    } else {
-                        if(strcmp(nomePessoa, valorCampoBusca) == 0){ 
-                            registroEncontrado = 1;
-                        }
-                    }
-                }
-                else if(strcmp(nomeCampoBusca, "nomeUsuario") == 0){
-                    if(strcmp(valorCampoBusca, "NULO") == 0){
-                        if(tamNomeUsuario == 0){ 
-                            registroEncontrado = 1;
-                        }
-                    } else {
-                        if(strcmp(nomeUsuario, valorCampoBusca) == 0){ 
-                            registroEncontrado = 1;
-                        }
-                    }
-                }
-                
-                if(registroEncontrado == 1){
-                    atualizarRegistroIndividual(arqPessoa, posRegistro, nomeCampoAtualiza, valorCampoAtualiza, cabecalho, vetorIndice, idPessoa);
-                    
-                    // Atualiza sizeDados após cada atualização
-                    int64_t posAtual = ftell(arqPessoa);
-                    fseek(arqPessoa, 0, SEEK_END);
-                    sizeDados = ftell(arqPessoa);
-                    fseek(arqPessoa, posAtual, SEEK_SET);
-                }
-                
-                fseek(arqPessoa, proxPosRegistro, SEEK_SET);
-            }
+            //Libera a lista de resultados
+            liberarListaResultados(resultados);
         }
     }
     
@@ -1098,18 +845,26 @@ void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado)
 }
 
 
-//FUNCIONALIDADE 10:
+//FUNCIONALIDADE 10
 void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nomeArquivoOrdenado, int n){
     //Abertura dos arquivos
-    FILE *arqPessoa = fopen(nomeArquivoPessoa, "rb");
-    FILE *arquivoIndice = fopen(nomeArquivoIndice, "rb");
-    FILE *arqOrdenado = fopen(nomeArquivoOrdenado, "rb");
+    char caminho[100] = "./";
+    strcat(caminho, nomeArquivoPessoa);
+    FILE *arqPessoa = fopen(caminho, "rb");
+    
+    char caminho_2[100] = "./";
+    strcat(caminho_2, nomeArquivoIndice);
+    FILE *arquivoIndice = fopen(caminho_2, "rb");
+    
+    char caminho_3[100] = "./";
+    strcat(caminho_3, nomeArquivoOrdenado);
+    FILE *arqOrdenado = fopen(caminho_3, "rb");
     
     if(arqPessoa == NULL || arquivoIndice == NULL || arqOrdenado == NULL){
         puts("Falha no processamento do arquivo.");
-        fclose(arqPessoa);
-        fclose(arquivoIndice);
-        fclose(arqOrdenado);
+        if(arqPessoa) fclose(arqPessoa);
+        if(arquivoIndice) fclose(arquivoIndice);
+        if(arqOrdenado) fclose(arqOrdenado);
         return;
     }
     
@@ -1137,7 +892,7 @@ void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nome
         return;
     }
     
-    //carrega o índice em memória
+    //Carrega o índice em memória
     fseek(arquivoIndice, 0, SEEK_END);
     long sizeIndice = ftell(arquivoIndice) - 12;
     int qtdIndice = sizeIndice / (sizeof(int) + sizeof(int64_t));
@@ -1150,7 +905,7 @@ void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nome
     }
     fclose(arquivoIndice);
     
-    //carrega todo o arquivo segue ordenado em memória
+    //Carrega todo o arquivo segue ordenado em memória
     int qtdRegistrosSegue;
     fseek(arqOrdenado, 1, SEEK_SET);
     fread(&qtdRegistrosSegue, sizeof(int), 1, arqOrdenado);
@@ -1174,15 +929,14 @@ void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nome
     }
     fclose(arqOrdenado);
     
-    //obtém o tamanho do arquivo pessoa
+    //Obtém o tamanho do arquivo pessoa
     fseek(arqPessoa, 0, SEEK_END);
     long sizeDados = ftell(arqPessoa);
     
-    //loop de buscas
+    //Loop de buscas
     for(int i = 0; i < n; i++){
         int entrada;
         char nomeCampo[100], valorCampo[100];
-        int encontrou = 0;
         
         // Lê a linha de busca
         scanf("%d", &entrada);
@@ -1190,101 +944,28 @@ void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nome
         getchar(); // Consome o '='
         scan_quote_string(valorCampo);
         
-        //Caso 1: Busca por idPessoa usando índice
-        if(strcmp(nomeCampo, "idPessoa") == 0){
-            int idBusca = atoi(valorCampo);
-            int64_t offset = buscaBinariaIndice(vetorIndice, qtdIndice, idBusca);
-            
-            if(offset != -1){
-                //Posiciona no registro
-                fseek(arqPessoa, offset, SEEK_SET);
-                
-                char removido;
-                fread(&removido, sizeof(char), 1, arqPessoa);
-                
-                if(removido == '0'){
-                    int tamRegistro;
-                    fread(&tamRegistro, sizeof(int), 1, arqPessoa);
-                    
-                    int idPessoa, idadePessoa, tamNomePessoa, tamNomeUsuario;
-                    char nomePessoa[100] = "";
-                    char nomeUsuario[100] = "";
-                    
-                    fread(&idPessoa, sizeof(int), 1, arqPessoa);
-                    fread(&idadePessoa, sizeof(int), 1, arqPessoa);
-                    fread(&tamNomePessoa, sizeof(int), 1, arqPessoa);
-                    fread(nomePessoa, sizeof(char), tamNomePessoa, arqPessoa);
-                    nomePessoa[tamNomePessoa] = '\0';
-                    fread(&tamNomeUsuario, sizeof(int), 1, arqPessoa);
-                    fread(nomeUsuario, sizeof(char), tamNomeUsuario, arqPessoa);
-                    nomeUsuario[tamNomeUsuario] = '\0';
-                    
-                    //imprime a junção
-                    imprimirJuncao(idPessoa, idadePessoa, tamNomePessoa, nomePessoa, tamNomeUsuario, nomeUsuario, registrosSegue, qtdRegistrosSegue, idPessoa);
-                    encontrou = 1;
-                }
-            }
+        // USA A FUNÇÃO MODULAR DA FUNCIONALIDADE 4
+        resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, qtdIndice, sizeDados, nomeCampo, valorCampo);
+        
+        // Nenhum registro encontrado
+        if(resultados == NULL){
+            printf("Registro inexistente.\n");
         }
-        //Caso 2: Busca sequencial por outros campos
-        else {
-            fseek(arqPessoa, 17, SEEK_SET);
-            
-            while(ftell(arqPessoa) < sizeDados){
-                char removido;
-                fread(&removido, sizeof(char), 1, arqPessoa);
-                
-                int tamRegistro;
-                fread(&tamRegistro, sizeof(int), 1, arqPessoa);
-                
-                if(removido == '1'){
-                    fseek(arqPessoa, tamRegistro, SEEK_CUR);
-                    continue;
-                }
-                
-                int idPessoa, idadePessoa, tamNomePessoa, tamNomeUsuario;
-                char nomePessoa[100] = "";
-                char nomeUsuario[100] = "";
-                
-                fread(&idPessoa, sizeof(int), 1, arqPessoa);
-                fread(&idadePessoa, sizeof(int), 1, arqPessoa);
-                fread(&tamNomePessoa, sizeof(int), 1, arqPessoa);
-                fread(nomePessoa, sizeof(char), tamNomePessoa, arqPessoa);
-                nomePessoa[tamNomePessoa] = '\0';
-                fread(&tamNomeUsuario, sizeof(int), 1, arqPessoa);
-                fread(nomeUsuario, sizeof(char), tamNomeUsuario, arqPessoa);
-                nomeUsuario[tamNomeUsuario] = '\0';
-                
-                // Verifica se satisfaz o critério
-                int registroEncontrado = 0;
-                
-                if(strcmp(nomeCampo, "idadePessoa") == 0){
-                    if(idadePessoa == atoi(valorCampo)) {
-                        registroEncontrado = 1;
-                    }
-                }
-                else if(strcmp(nomeCampo, "nomePessoa") == 0){
-                    if(strcmp(nomePessoa, valorCampo) == 0){
-                        registroEncontrado = 1;
-                    }
-                }
-                else if(strcmp(nomeCampo, "nomeUsuario") == 0){
-                        if(strcmp(nomeUsuario, valorCampo) == 0){
-                            registroEncontrado = 1;
-                    }
-                }
-                
-                if(registroEncontrado == 1){
-                    imprimirJuncao(idPessoa, idadePessoa, tamNomePessoa, nomePessoa, tamNomeUsuario, nomeUsuario, registrosSegue, qtdRegistrosSegue, idPessoa);
-                    encontrou = 1;
-                }
+        else{
+            // Percorre todos os resultados encontrados
+            resultadoBusca *atual = resultados;
+            while(atual != NULL){
+                // Imprime a junção para cada registro encontrado
+                imprimirJuncao(atual->idPessoa, atual->idadePessoa, atual->tamNomePessoa, atual->nomePessoa, atual->tamNomeUsuario, atual->nomeUsuario, registrosSegue, qtdRegistrosSegue, atual->idPessoa);
+                atual = atual->proxResultado;
             }
         }
         
-        if(encontrou == 0){
-            printf("Registro inexistente.\n");
-        }
+        // Libera memória da lista de resultados
+        liberarListaResultados(resultados);
     }
-    //libera memória
+    
+    //Libera memória
     free(vetorIndice);
     for(int i = 0; i < qtdRegistrosSegue; i++){
         free(registrosSegue[i].dataInicioQueSegue);

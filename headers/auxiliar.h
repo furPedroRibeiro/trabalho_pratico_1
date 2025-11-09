@@ -74,8 +74,15 @@ void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, int6
 
 //funções para as funcionalidade 3 e 4
 void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario);
+//busca binaria para encontrar o byteOffset do registro com o id buscado
 int64_t buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado);
+int64_t buscaBinariaIndice2(indice2 *vetor, int tamanho, int idBuscado);
 void imprimirRegistroPorByteOffset(FILE *arqPessoa, int64_t byteOffset, struct registro_2 reg);
+
+//para a função 4, busca
+resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo);
+void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, struct registro_2 *reg, int64_t byteOffset);
+void liberarListaResultados(resultadoBusca *raizLista);
 
 //funções para a funcionalidade 6
 
