@@ -23,7 +23,7 @@ typedef struct registro{
 //estrutura de dados do tipo lista duplamente encadeada para armazenar os registros do arquivo de índice antes de inseri-lo, é duplamente encadeada pois na hora da inserção é necessário inserir um registro no meio de outros registros, necessitando assim que seja verificado o nó anterior e o próximo da lista(talvez na implementação da inserção seja observado que a lista não tem necessidade de ser duplamente encadeada, mas para maior eficiência no futuro, é duplamente encadeada desde já) 
 typedef struct indice{
   int idPessoa;
-  int64_t byteOffset;
+  long int byteOffset;
   struct indice *proxIndice;
   struct indice *antIndice;
 } indice;
@@ -39,7 +39,7 @@ struct registro_2 {
 //estrutura igual a estrutura indice acima, mas essa é usada para a funcionalidade 4
 typedef struct indice2{
   int idPessoa;
-  int64_t byteOffset;
+  long int byteOffset;
 } indice2;
 
 //estrutura de dados do tipo lista duplamente encadeada para armazenar os campos encontrados na busca
@@ -50,7 +50,7 @@ typedef struct resultadoBusca{
   char nomePessoa[100];
   int tamNomeUsuario;
   char nomeUsuario[100];
-  int64_t byteOffset;
+  long int byteOffset;
   struct resultadoBusca *proxResultado;
 } resultadoBusca;
 
@@ -62,27 +62,27 @@ extern indice* raizListaIndice;
 
 //FUNÇÃO DE LER O ARQUIVO CSV
 void lerCSV(FILE* arquivoEntrada, FILE* arquivoDados, FILE* arquivoIndice);
-void criaCabecalhoArquivoDados(FILE *arqDados, char status, int quantidadePessoas, int quantidadeRemovidos, int64_t proxByteoffset);
+void criaCabecalhoArquivoDados(FILE *arqDados, char status, int quantidadePessoas, int quantidadeRemovidos, long int proxByteoffset);
 //função para inserir um registro no arquivo de dados, se der errado retorna 0
-void insereRegistro(registro* novoRegistro, FILE* arquivoDados, int quantidadeRemovidos, int64_t proxByteoffset);
+void insereRegistro(registro* novoRegistro, FILE* arquivoDados, int quantidadeRemovidos, long int proxByteoffset);
 //função para inserir os registros de índice no arquivo de índice
 void insereRegistroIndice(indice* raizListaIndice, FILE* arquivoIndice);
 //FUNÇÃO PARA CRIAR UM NÓ DE REGISTRO E ADICIONÁ-LO A LISTA DE REGISTROS, ESSA FUNÇÃO É CHAMADA DENTRO DE LERCSV()
 void criarNoRegistro(registro* novoRegistro, char *campoIdPessoa, char *campoIdadePessoa, char *campoNomePessoa, char *campoNomeUsuario, int tamRegistroBytes);
 //Função para criar um nó e adicioná-lo a lista de registros do arquivo de indice, não retorna nada
-void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, int64_t byteoffset);
+void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, long int byteoffset);
 
 //funções para as funcionalidade 3 e 4
 FILE* abrirArquivoComStatus(const char *nomeArquivo, const char *modo);
 void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario);
 //busca binaria para encontrar o byteOffset do registro com o id buscado
-int64_t buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado);
-int64_t buscaBinariaIndice2(indice2 *vetor, int tamanho, int idBuscado);
-void imprimirRegistroPorByteOffset(FILE *arqPessoa, int64_t byteOffset, struct registro_2 reg);
+long int buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado);
+long int buscaBinariaIndice2(indice2 *vetor, int tamanho, int idBuscado);
+void imprimirRegistroPorByteOffset(FILE *arqPessoa, long int byteOffset, struct registro_2 reg);
 
 //para a função 4, busca
 resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo);
-void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, struct registro_2 *reg, int64_t byteOffset);
+void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, struct registro_2 *reg, long int byteOffset);
 void liberarListaResultados(resultadoBusca *raizLista);
 
 //funções para a funcionalidade 6
@@ -93,7 +93,7 @@ typedef struct cabecalhoPessoa{
   char status[2];
   int quantidadePessoas;
   int quantidadeRemovidos;
-  int64_t proxByteoffset;
+  long int proxByteoffset;
 } cabecalhoPessoa;
 
 typedef struct noRegistroUnico{
@@ -105,18 +105,18 @@ typedef struct noRegistroUnico{
 
 typedef struct noIndice{
   int idPessoa;
-  int64_t byteoffset;
+  long int byteoffset;
 } noIndice;
 
 cabecalhoPessoa* lerCabecalho(FILE *nomeArquivo);
 noRegistroUnico* lerEntradaInsercaoUnica();
 void insereRegistroUnicoPessoa(FILE *nomeArquivoPessoa, noRegistroUnico* regUnico, cabecalhoPessoa* cabecalho);
 noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n);
-void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset);
+void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, long int byteoffset);
 void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho);
 
 //funções para a funcionalidade 7
-void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual);
+void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual);
 int buscaBinariaAtualizar(indice* vetorIndice, int tamanho, int idPessoa);
 
 //funções para funcionalidade 8:
@@ -141,7 +141,7 @@ int comparaParaOrdenar(const void *a, const void *b);
 void escreveSegueOrdenado(FILE *arqOrdenado, int sizeArray, noSegue *registros);
 
 //Funções para funcionalidade 10
-int64_t buscaBinariaSegueModificada(noSegue *registros, int tamanho, int idPessoaBuscado);
+long int buscaBinariaSegueModificada(noSegue *registros, int tamanho, int idPessoaBuscado);
 void imprimirJuncao(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario, noSegue *registrosSegue, int tamanhoSegue, int idPessoaBuscado);
 
 

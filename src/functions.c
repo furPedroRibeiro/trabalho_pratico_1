@@ -87,13 +87,13 @@ void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoDados, char *n
     // } else{
         
     // }
-    // int64_t proxByteoffset;
+    // long int proxByteoffset;
     // fseek(arqDadosLeitura, 1, SEEK_SET);
     // int quantidadePessoas = 0;
     // fread(&quantidadePessoas, sizeof(int), 1, arqDados);
     // int quantidadeRemovidos = 0;
     // fread(&quantidadeRemovidos, sizeof(int), 1, arqDados);
-    // fread(&proxByteoffset, sizeof(int64_t), 1, arqDados);
+    // fread(&proxByteoffset, sizeof(long int), 1, arqDados);
     // printf("Proximo Byteoffset disponivel: %ld\n", proxByteoffset);
     // printf("Qtd pessoas: %d\n", quantidadePessoas);
     // printf("Qtd removidos: %d\n", quantidadeRemovidos);
@@ -165,7 +165,7 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     long sizeIndice = ftell(arquivoIndice) - 12; // remove os bytes do cabeçalho
 
     //calcula quantos registros de índice existem no arquivo
-    int qtdIndice = sizeIndice / (sizeof(int) + sizeof(int64_t));
+    int qtdIndice = sizeIndice / (sizeof(int) + sizeof(long int));
 
     //posiciona o ponteiro depois do cabeçalho
     fseek(arquivoIndice, 12, SEEK_SET);
@@ -176,7 +176,7 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //carrega o índice completo no vetor
     for(int i = 0; i < qtdIndice; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fread(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
+        fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
     }
     fclose(arquivoIndice);
 
@@ -236,14 +236,14 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     fread(&cabecalho->status[0], sizeof(char), 1, arqPessoa);
     fread(&cabecalho->quantidadePessoas, sizeof(int), 1, arqPessoa);
     fread(&cabecalho->quantidadeRemovidos, sizeof(int), 1, arqPessoa);
-    fread(&cabecalho->proxByteoffset, sizeof(int64_t), 1, arqPessoa);
+    fread(&cabecalho->proxByteoffset, sizeof(long int), 1, arqPessoa);
     cabecalho->status[1] = '\0';
     
     fseek(arquivoIndice, 12, SEEK_SET); // pula o cabeçalho para montar vetor de índices
     indice *vetorIndice = malloc(cabecalho->quantidadePessoas * sizeof(indice));
     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fread(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
+        fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
     }
 
     //Vetor para marcar IDs que devem ser removidos
@@ -337,7 +337,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     // Escreve os índices após o cabeçalho
     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fwrite(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fwrite(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
+        fwrite(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
     }
     
     // Marca os arquivos como consistentes
@@ -450,7 +450,7 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     indice *vetorIndice = malloc(cabecalho->quantidadePessoas * sizeof(indice));
     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fread(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
+        fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
     }
     
     fseek(arqPessoa, 0, SEEK_END);
@@ -485,7 +485,7 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
                 atualizarRegistroIndividual(arqPessoa, atual->byteOffset, nomeCampoAtualiza, valorCampoAtualiza, cabecalho, vetorIndice, atual->idPessoa);
                 
                 // Atualiza sizeDados após atualização
-                int64_t posAtual = ftell(arqPessoa);
+                long int posAtual = ftell(arqPessoa);
                 fseek(arqPessoa, 0, SEEK_END);
                 sizeDados = ftell(arqPessoa);
                 fseek(arqPessoa, posAtual, SEEK_SET);
@@ -523,14 +523,14 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //escreve os índices
     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fwrite(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fwrite(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
+        fwrite(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
     }
     
     //atualiza o cabeçalho do arquivo pessoa
     fseek(arqPessoa, 1, SEEK_SET);
     fwrite(&cabecalho->quantidadePessoas, sizeof(int), 1, arqPessoa);
     fwrite(&cabecalho->quantidadeRemovidos, sizeof(int), 1, arqPessoa);
-    fwrite(&cabecalho->proxByteoffset, sizeof(int64_t), 1, arqPessoa);
+    fwrite(&cabecalho->proxByteoffset, sizeof(long int), 1, arqPessoa);
     
     //marca os arquivos como consistentes
     defineStatusArquivo(arqPessoa, '1');
@@ -792,13 +792,13 @@ void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nome
     //Carrega o índice em memória
     fseek(arquivoIndice, 0, SEEK_END);
     long sizeIndice = ftell(arquivoIndice) - 12;
-    int qtdIndice = sizeIndice / (sizeof(int) + sizeof(int64_t));
+    int qtdIndice = sizeIndice / (sizeof(int) + sizeof(long int));
     
     fseek(arquivoIndice, 12, SEEK_SET);
     indice *vetorIndice = malloc(qtdIndice * sizeof(indice));
     for(int i = 0; i < qtdIndice; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fread(&vetorIndice[i].byteOffset, sizeof(int64_t), 1, arquivoIndice);
+        fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
     }
     fclose(arquivoIndice);
     
