@@ -200,7 +200,7 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         //nenhum registro encontrado
         if (resultados == NULL) {
             printf("Registro inexistente.\n\n");
-        }
+        } 
         // Imprime todos os registros encontrados
         else{
             resultadoBusca *atual = resultados;
@@ -247,7 +247,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     }
 
     //Vetor para marcar IDs que devem ser removidos
-    int *idsParaRemover = malloc(cabecalho->quantidadePessoas * n * sizeof(int));
+    int *idsParaRemover = malloc(cabecalho->quantidadePessoas * sizeof(int));
     int qtdIdsParaRemover = 0;
     
     //obtém o tamanho do arquivo pessoa
@@ -263,8 +263,8 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         scanf("%d", &entrada);
         scanf(" %[^=]", nomeCampo);
         getchar(); // Consome o '='
-        valorCampo[0] = '\0';
         scan_quote_string(valorCampo);
+        
 
         //somente aqui muda na modularização, mas não está funcionando
         //usa a função de busca buscarRegistrosPorCampo
@@ -273,7 +273,6 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         //Processa todos os registros encontrados
         if(resultados != NULL){
             resultadoBusca *atual = resultados;
-            puts("Chega aqui");
             while(atual != NULL){
                 //marca o registro como removido no arquivo de dados
                 fseek(arqPessoa, atual->byteOffset, SEEK_SET);
@@ -294,16 +293,12 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //até aqui, o resto é tudo a mesma coisa
     
     // Remove todos os IDs marcados do vetor de índices
-    int tamanhoOriginalVetor = cabecalho->quantidadePessoas;
-
     for(int i = 0; i < qtdIdsParaRemover; i++){
-        for(int j = 0; j < tamanhoOriginalVetor; j++){
+        for(int j = 0; j < cabecalho->quantidadePessoas; j++){
             if(vetorIndice[j].idPessoa == idsParaRemover[i]){
-                // Desloca os elementos
-                for(int k = j; k < tamanhoOriginalVetor - 1; k++){
+                for(int k = j; k < cabecalho->quantidadePessoas - 1; k++){
                     vetorIndice[k] = vetorIndice[k + 1];
                 }
-                tamanhoOriginalVetor--;
                 cabecalho->quantidadePessoas--;
                 break;
             }
