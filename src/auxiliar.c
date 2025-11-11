@@ -430,6 +430,10 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, in
       //compara o campo solicitado com o valor buscado
       int encontrado = 0;
       if(strcmp(nomeCampo, "idadePessoa") == 0){
+        // int intValorCampo;
+        // if(valorCampo[0] = '\0'){
+
+        // }
         if(strlen(valorCampo) == 0){
           if(reg.idadePessoa == -1){
             encontrado = 1;
