@@ -259,11 +259,46 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         int entrada;
         char nomeCampo[100], valorCampo[100];
         
-        //Lê a linha de busca
-        scanf("%d", &entrada);
-        scanf(" %[^=]", nomeCampo);
-        getchar(); // Consome o '='
-        scan_quote_string(valorCampo);
+                // //Lê a linha de busca
+        // scanf("%d", &entrada);
+        // scanf(" %[^=]", nomeCampo);
+        // getchar(); // Consome o '='
+        // scan_quote_string(valorCampo);
+
+        //faz a leitura da entrada através de stdin
+        int c = 0; 
+        int i = 0;
+        char bufferEntrada[1024];
+        
+        // lê até EOF, \0 ou \n — cobre todos os casos possíveis porque a entrada no runcodes é de um jeito e pelo teclado para testes é de outro, então ao invés de usar fgets fizemos a adaptação para todos os tipos de terminação de entrada
+        while ((c = getchar()) != EOF && c != '\0' && c != '\n') {
+            if (i < sizeof(bufferEntrada) - 1) {
+                bufferEntrada[i++] = c;
+            } else {
+                //limpa o resto da entrada
+                while ((c = getchar()) != EOF && c != '\n');
+                break; // evita estouro de buffer(seg fault)
+            }
+        }
+        bufferEntrada[i] = '\0'; //coloca o \0 no fim da entrada para usar strtok corretamente
+
+        //lendo qual iteração é
+        char *parametro;
+        parametro = strtok(bufferEntrada, " ");
+        entrada = atoi(parametro);
+        parametro = strtok(NULL, "=");
+        char *campo = removeEspacosEmBranco(parametro);
+        strcpy(nomeCampo, campo);
+        parametro = strtok(NULL, "=");
+        char *valor = removeEspacosEmBranco(parametro);
+        strcpy(valorCampo, removerAspas(valor));
+        
+        if(strcmp(valorCampo, "NULO") == 0){
+            strcpy(valorCampo, "");
+        }
+
+        // printf("%s", nomeCampo);
+        // printf("%s\n", valorCampo);
         
 
         //somente aqui muda na modularização, mas não está funcionando

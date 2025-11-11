@@ -18,7 +18,7 @@ run:
 
 clean:
 		rm $(OBJ)/*
-		rm ./*.exe
+		rm ./trabPratico
 		
 cleanbin:
 		rm ./*.bin
