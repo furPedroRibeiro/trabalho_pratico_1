@@ -14,7 +14,7 @@ static registro* ultimoElemento = NULL;
 static char status = '0';
 static int quantidadePessoas = 0;
 static int quantidadeRemovidos = 0;
-static int64_t proxByteoffset = 17;
+static long int proxByteoffset = 17;
 
 //FUNÇÕES PARA FUNCIONALIDADE 2
 
@@ -32,7 +32,7 @@ void lerCSV(FILE* arquivoDados, FILE* arquivoIndice, FILE* arquivoEntrada){
   //aqui começa a leitura a partir da segunda linha do arquivo de dados
   while(fgets(bufferLinha, sizeof(bufferLinha), arquivoEntrada) != NULL){
     //declarando variável para obter o byteoffset do registro que será inserido nessa iteração
-    int64_t byteoffsetAtual = proxByteoffset;
+    long int byteoffsetAtual = proxByteoffset;
     //contador de tamanho de registro, tem no mínimo 21 bytes por registro por causa dos campos de tamanho fixo
     int tamRegistroBytes = 16;
     //removendo \n do fim da string
@@ -77,7 +77,7 @@ void lerCSV(FILE* arquivoDados, FILE* arquivoIndice, FILE* arquivoEntrada){
 }
 
 //função que cria cabeçalho do arquivo de dados
-void criaCabecalhoArquivoDados(FILE* arquivoDados, char status, int quantidadePessoas, int quantidadeRemovidos, int64_t proxByteoffsetAtual){
+void criaCabecalhoArquivoDados(FILE* arquivoDados, char status, int quantidadePessoas, int quantidadeRemovidos, long int proxByteoffsetAtual){
   //garante que o ponteiro está posicionado no começo do arquivo:
   fseek(arquivoDados, 0, SEEK_SET);
   //escreve cabeçalho
@@ -86,11 +86,11 @@ void criaCabecalhoArquivoDados(FILE* arquivoDados, char status, int quantidadePe
   fwrite(&status, sizeof(char), 1, arquivoDados);
   fwrite(&quantidadePessoas, sizeof(int), 1, arquivoDados);
   fwrite(&quantidadeRemovidos, sizeof(int), 1, arquivoDados);
-  fwrite(&proxByteoffsetAtual, sizeof(int64_t), 1, arquivoDados);
+  fwrite(&proxByteoffsetAtual, sizeof(long int), 1, arquivoDados);
 }
 
 //função para inserir um registro no arquivo de dados
-void insereRegistro(registro* novoRegistro, FILE* arquivoDados, int quantidadeRemovidos, int64_t proxByteoffsetAtual){
+void insereRegistro(registro* novoRegistro, FILE* arquivoDados, int quantidadeRemovidos, long int proxByteoffsetAtual){
   //a cada inserção, o cabeçalho é atualizado com a quantidade de pessoas, o número de pessoas removidas e o próximo byte offset disponível, além disso, o status é definido pra 1 no começo da inserção para indicar que o arquivo está inconsistente e depois da inserção ele é 0 para mostrar que está consistente
 
   //agora reposicionamos o ponteiro do arquivo para escrever o registro, aproveitando que proxByteOffset ainda não foi atualizado
@@ -131,7 +131,7 @@ void insereRegistro(registro* novoRegistro, FILE* arquivoDados, int quantidadeRe
   //para atualizar a quantidade de pessoas, vamos escrever um inteiro
   fwrite(&quantidadePessoas, sizeof(int), 1, arquivoDados);
   fwrite(&quantidadeRemovidos, sizeof(int), 1, arquivoDados);
-  fwrite(&proxByteoffset, sizeof(int64_t), 1, arquivoDados);
+  fwrite(&proxByteoffset, sizeof(long int), 1, arquivoDados);
   
   if(novoRegistro->proxRegistro != NULL){
     fseek(arquivoDados, proxByteoffset, SEEK_SET);
@@ -153,7 +153,7 @@ void insereRegistroIndice(indice* raizListaIndice, FILE* arquivoIndice){
   while(noAuxiliarIndice != NULL){
     //obtendo informações
     int idPessoa = noAuxiliarIndice->idPessoa;
-    int64_t byteoffset = noAuxiliarIndice->byteOffset;
+    long int byteoffset = noAuxiliarIndice->byteOffset;
 
     //print pra ver se deu certo:
     // printf("\n\nId pessoa: %d byteoffset: %ld ", idPessoa, byteoffset);
@@ -161,7 +161,7 @@ void insereRegistroIndice(indice* raizListaIndice, FILE* arquivoIndice){
 
     //escreve no arquivo de índice
     fwrite(&idPessoa, sizeof(int), 1, arquivoIndice);
-    fwrite(&byteoffset, sizeof(int64_t), 1, arquivoIndice);
+    fwrite(&byteoffset, sizeof(long int), 1, arquivoIndice);
 
     //atualiza o nó atual
     noAuxiliarIndice = noAuxiliarIndice->proxIndice;
@@ -229,7 +229,7 @@ void criarNoRegistro(registro* novoRegistro, char *campoIdPessoa, char *campoIda
 }
 
 //essa função cria e adiciona um nó novo a lista duplamente encadeada de registros do arquivo de índice
-void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, int64_t byteoffset){
+void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, long int byteoffset){
   novoRegistroIndice->idPessoa = atoi(campoIdPessoa);
   novoRegistroIndice->byteOffset = byteoffset;
   //a inserção será ordenada, então começamos com um ponteiro auxiliar que aponta para a raiz da lista
@@ -338,7 +338,7 @@ void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *no
 }
 
 //função responsavel por adicionar um nó no final da lista de resultados de busca
-void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, struct registro_2 *reg, int64_t byteOffset){
+void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, struct registro_2 *reg, long int byteOffset){
   resultadoBusca *novoResultado = calloc(1, sizeof(resultadoBusca));
   
   //copia os campos do registro encontrado
@@ -379,7 +379,7 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, in
 
   if(strcmp(nomeCampo, "idPessoa") == 0){
     int idBusca = atoi(valorCampo);
-    int64_t offset = buscaBinariaIndice(vetorIndice, qtdIndice, idBusca);
+    long int offset = buscaBinariaIndice(vetorIndice, qtdIndice, idBusca);
     
     if(offset != -1){
       fseek(arqPessoa, offset, SEEK_SET);
@@ -407,7 +407,7 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, in
   } else{
     fseek(arqPessoa, 17, SEEK_SET); //pula o cabeçalho
     while(ftell(arqPessoa) < sizeDados){
-      int64_t offsetAtual = ftell(arqPessoa);
+      long int offsetAtual = ftell(arqPessoa);
       
       char removido;
       fread(&removido, sizeof(char), 1, arqPessoa);
@@ -472,7 +472,7 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, in
 }
 
 //busca binaria para o tipo indice (com ponteiros)
-int64_t buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado){
+long int buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado){
     int begin = 0;
     int end = tamanho - 1;
 
@@ -492,7 +492,7 @@ int64_t buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado){
 }
 
 //imprimir registro encontrado por byteOffset
-void imprimirRegistroPorByteOffset(FILE *arqPessoa, int64_t byteOffset, struct registro_2 reg){
+void imprimirRegistroPorByteOffset(FILE *arqPessoa, long int byteOffset, struct registro_2 reg){
     //posiciona o ponteiro no registro 
     fseek(arqPessoa, byteOffset, SEEK_SET);
 
@@ -531,7 +531,7 @@ cabecalhoPessoa* lerCabecalho(FILE *nomeArquivo){
   cabecalho->status[1] = '\0';
   fread(&cabecalho->quantidadePessoas, sizeof(int), 1, nomeArquivo);
   fread(&cabecalho->quantidadeRemovidos, sizeof(int), 1, nomeArquivo);
-  fread(&cabecalho->proxByteoffset, sizeof(int64_t), 1, nomeArquivo);
+  fread(&cabecalho->proxByteoffset, sizeof(long int), 1, nomeArquivo);
   return cabecalho; //após ler o cabecalho, retorna para a função
 }
 
@@ -621,12 +621,12 @@ void insereRegistroUnicoPessoa(FILE *nomeArquivoPessoa, noRegistroUnico* regUnic
   //depois que escreve tudo, precisamos atualizar o cabeçalho
   int quantidadePessoas = cabecalho->quantidadePessoas;
   quantidadePessoas++;
-  int64_t proxByteoffset = cabecalho->proxByteoffset + tamRegistro + 5;
+  long int proxByteoffset = cabecalho->proxByteoffset + tamRegistro + 5;
   //escreve no cabeçalho:
   fseek(nomeArquivoPessoa, 1, SEEK_SET);
   fwrite(&quantidadePessoas, sizeof(int), 1, nomeArquivoPessoa);
   fseek(nomeArquivoPessoa, 9, SEEK_SET);
-  fwrite(&proxByteoffset, sizeof(int64_t), 1, nomeArquivoPessoa);
+  fwrite(&proxByteoffset, sizeof(long int), 1, nomeArquivoPessoa);
 }
 
 noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n){
@@ -636,13 +636,13 @@ noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n){
   fseek(nomeArquivoIndice, 12, SEEK_SET); //posiciona ponteiro de leitura no primeiro registro
   for(int i = 0; i < n; i++){
     fread(&indices[i].idPessoa, sizeof(int), 1, nomeArquivoIndice);
-    fread(&indices[i].byteoffset, sizeof(int64_t), 1, nomeArquivoIndice);
+    fread(&indices[i].byteoffset, sizeof(long int), 1, nomeArquivoIndice);
   }
   //depois da leitura, retorna o vetor de indices
   return indices;
 }
 
-void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, int64_t byteoffset){
+void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, long int byteoffset){
   //o conceito de busca binária é utilizado para retornar uma posição válida em que o registro pode ser inserido
   int pos = buscaBinariaVetorIndice(indices, tamanhoVetor, idPessoa);
   
@@ -701,7 +701,7 @@ void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
   fseek(nomeArquivoIndice, 12, SEEK_SET);
   for(int i = 0; i < tamanho; i++){
     fwrite(&indices[i].idPessoa, sizeof(int), 1, nomeArquivoIndice);
-    fwrite(&indices[i].byteoffset, sizeof(int64_t), 1, nomeArquivoIndice);
+    fwrite(&indices[i].byteoffset, sizeof(long int), 1, nomeArquivoIndice);
   }
   //depois de escrever tudo:
   return;
@@ -711,7 +711,7 @@ void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
 //FUNÇÕES PARA FUNCIONALIDADE 7:
 
 //função auxiliar para atualizar um registro individual
-void atualizarRegistroIndividual(FILE *arqPessoa, int64_t posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual){
+void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual){
     //posiciona no registro
     fseek(arqPessoa, posRegistro, SEEK_SET);
     
@@ -946,7 +946,7 @@ void escreveSegueOrdenado(FILE *arqOrdenado, int sizeArray, noSegue *registros){
   fwrite(&qtdRegistros, sizeof(int), 1, arqOrdenado);
   fwrite(&proxRRN, sizeof(int), 1, arqOrdenado);
 
-  int64_t byteoffset = 9; //pula o cabeçalho
+  long int byteoffset = 9; //pula o cabeçalho
 
   for(int i = 0; i < sizeArray; i++){
     fseek(arqOrdenado, byteoffset, SEEK_SET);
@@ -973,7 +973,7 @@ void escreveSegueOrdenado(FILE *arqOrdenado, int sizeArray, noSegue *registros){
 
 //FUNÇÕES PARA A FUNCIONALIDADE 10:
 //Busca binária modificada que retorna a primeira ocorrência do idPessoaQueSegue
-int64_t buscaBinariaSegueModificada(noSegue *registros, int tamanho, int idPessoaBuscado){
+long int buscaBinariaSegueModificada(noSegue *registros, int tamanho, int idPessoaBuscado){
   if(tamanho == 0) return -1;
   
   int inicio = 0;
@@ -1041,7 +1041,7 @@ void imprimirJuncao(int idPessoa, int idadePessoa, int tamNomePessoa, char *nome
   printf("\n");
   
   //Busca binária modificada para encontrar a primeira ocorrência
-  int64_t posicaoInicial = buscaBinariaSegueModificada(registrosSegue, tamanhoSegue, idPessoaBuscado);
+  long int posicaoInicial = buscaBinariaSegueModificada(registrosSegue, tamanhoSegue, idPessoaBuscado);
   
   // Se não encontrou nenhum registro de segue, retorna
   if(posicaoInicial == -1){
