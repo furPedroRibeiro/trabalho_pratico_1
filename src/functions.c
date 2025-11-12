@@ -39,10 +39,8 @@ void criarIndice(char *nomeArquivoIndice){
 void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoDados, char *nomeArquivoIndice){
     //testando existência dos arquivos:
     //arquivo de dados será criado aqui
-    char caminho[100] = "./";
-    strcat(caminho, nomeArquivoDados);
     //cria e abre arquivo pra escrita
-    FILE* arqDados = fopen(caminho, "wb");
+    FILE* arqDados = fopen(nomeArquivoDados, "wb");
     if(arqDados == NULL){
         puts("Falha no processamento do arquivo.");
         return;
@@ -53,24 +51,22 @@ void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoDados, char *n
     defineStatusArquivo(arqDados, '0');
 
 
-    //agora testando se o arquivo de índice existe:
-    char caminho_1[100] = "./";
-    strcat(caminho_1, nomeArquivoIndice);
-    //abre arquivo pra escrita permitindo fopen
-    FILE* arqIndice = fopen(caminho_1, "rb+");
+    //abre arquivo de índice pra escrita e leitura
+    FILE* arqIndice = fopen(nomeArquivoIndice, "rb+");
     if(arqIndice == NULL){
         puts("Falha no processamento do arquivo.");
         return;
     } else{
         
     }
+
     //testando se csv existe
-    char caminho_2[] = "./";
-    strcat(caminho_2, nomeArquivoEntrada);
-    FILE *arqEntrada = fopen(caminho_2, "r");
+    FILE *arqEntrada = fopen(nomeArquivoEntrada, "r");
     //se der erro no processamento do arquivo, aparece a seguinte mensagem:
     if(arqEntrada == NULL){
         puts("Falha no processamento do arquivo.");
+        fclose(arqDados);
+        fclose(arqIndice);
         return;
     } else{
         
@@ -163,12 +159,12 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     fseek(arquivoIndice, 12, SEEK_SET);
 
     //aloca memória
-    indice *vetorIndice = malloc(qtdIndice * sizeof(indice));
+    noIndice *vetorIndice = malloc(qtdIndice * sizeof(noIndice));
     
     //carrega o índice completo no vetor
     for(int i = 0; i < qtdIndice; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
+        fread(&vetorIndice[i].byteoffset, sizeof(long int), 1, arquivoIndice);
     }
     fclose(arquivoIndice);
 
@@ -228,10 +224,10 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     cabecalho->status[1] = '\0';
     
     fseek(arquivoIndice, 12, SEEK_SET); // pula o cabeçalho para montar vetor de índices
-    indice *vetorIndice = malloc(cabecalho->quantidadePessoas * sizeof(indice));
+    noIndice *vetorIndice = malloc(cabecalho->quantidadePessoas * sizeof(noIndice));
     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
+        fread(&vetorIndice[i].byteoffset, sizeof(long int), 1, arquivoIndice);
     }
 
     //Vetor para marcar IDs que devem ser removidos
@@ -349,7 +345,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     // Escreve os índices após o cabeçalho
     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fwrite(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fwrite(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
+        fwrite(&vetorIndice[i].byteoffset, sizeof(long int), 1, arquivoIndice);
     }
     
     // Marca os arquivos como consistentes
@@ -366,7 +362,6 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     binarioNaTela(nomeArquivoPessoa);
     binarioNaTela(nomeArquivoIndice);
 }
-
 
 //FUNCIONALIDADE 6:
 void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
@@ -440,121 +435,6 @@ void inserirUnicoRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int 
     binarioNaTela(nomeArquivoIndice);
 }
 
-// //FUNCIONALIDADE 7:
-// void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
-//     //Abertura dos arquivos
-//     FILE *arqPessoa = abrirArquivoComStatus(nomeArquivoPessoa, "rb+");
-//     FILE *arquivoIndice = abrirArquivoComStatus(nomeArquivoIndice, "rb+");
-    
-    
-//     //Marca os arquivos como inconsistentes
-//     defineStatusArquivo(arqPessoa, '0');
-//     defineStatusArquivo(arquivoIndice, '0');
-    
-//     //Lê o cabeçalho para memória
-//     cabecalhoPessoa *cabecalho = lerCabecalho(arqPessoa);
-    
-//     //Carrega o índice em memória primária
-//     fseek(arquivoIndice, 12, SEEK_SET); //pula o cabeçalho
-//     indice *vetorIndice = malloc(cabecalho->quantidadePessoas * sizeof(indice));
-//     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
-//         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-//         fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
-//     }
-    
-//     fseek(arqPessoa, 0, SEEK_END);
-//     long sizeDados = ftell(arqPessoa);
-    
-//     //Loop de atualizações
-//     for(int i = 0; i < n; i++){
-//         int entrada;
-//         char nomeCampoBusca[100], valorCampoBusca[100];
-//         char nomeCampoAtualiza[100], valorCampoAtualiza[100];
-        
-//         //lê a linha de busca e atualização
-//         scanf("%d", &entrada);
-//         scanf(" %[^=]", nomeCampoBusca);
-//         getchar(); // Consome o '='
-//         scan_quote_string(valorCampoBusca);
-        
-//         scanf(" %[^=]", nomeCampoAtualiza);
-//         getchar(); // Consome o '='
-//         scan_quote_string(valorCampoAtualiza);
-        
-
-//         //unicas mudanças que são feitas para modularização
-//         //usa a função de busca - buscarRegistrosPorCampo
-//         resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, cabecalho->quantidadePessoas, sizeDados, nomeCampoBusca, valorCampoBusca);
-        
-//         //Processa todos os registros encontrados
-//         if(resultados != NULL){
-//             resultadoBusca *atual = resultados;
-//             while(atual != NULL){
-//                 //atualiza o registro individual
-//                 atualizarRegistroIndividual(arqPessoa, atual->byteOffset, nomeCampoAtualiza, valorCampoAtualiza, cabecalho, vetorIndice, atual->idPessoa);
-                
-//                 // Atualiza sizeDados após atualização
-//                 long int posAtual = ftell(arqPessoa);
-//                 fseek(arqPessoa, 0, SEEK_END);
-//                 sizeDados = ftell(arqPessoa);
-//                 fseek(arqPessoa, posAtual, SEEK_SET);
-                
-//                 atual = atual->proxResultado;
-//             }
-            
-//             //Libera a lista de resultados
-//             liberarListaResultados(resultados);
-//         }
-//     }
-//     // a mudança pós a modulariação foi até aqui
-
-//     //reescreve o arquivo de índice
-//     fclose(arquivoIndice);
-//     remove(nomeArquivoIndice);
-    
-//     arquivoIndice = fopen(nomeArquivoIndice, "wb+");
-//     if(arquivoIndice == NULL){
-//         puts("Falha no processamento do arquivo.");
-//         free(vetorIndice);
-//         free(cabecalho);
-//         fclose(arqPessoa);
-//         return;
-//     }
-    
-//     //escreve o cabeçalho do índice
-//     char statusIndice;
-//     statusIndice = '0';
-//     fseek(arquivoIndice, 0, SEEK_SET);
-//     fwrite(&statusIndice, sizeof(char), 1, arquivoIndice);
-//     char lixo[12] = "$$$$$$$$$$$";
-//     fwrite(lixo, sizeof(char), 11, arquivoIndice);
-    
-//     //escreve os índices
-//     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
-//         fwrite(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-//         fwrite(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
-//     }
-    
-//     //atualiza o cabeçalho do arquivo pessoa
-//     fseek(arqPessoa, 1, SEEK_SET);
-//     fwrite(&cabecalho->quantidadePessoas, sizeof(int), 1, arqPessoa);
-//     fwrite(&cabecalho->quantidadeRemovidos, sizeof(int), 1, arqPessoa);
-//     fwrite(&cabecalho->proxByteoffset, sizeof(long int), 1, arqPessoa);
-    
-//     //marca os arquivos como consistentes
-//     defineStatusArquivo(arqPessoa, '1');
-//     defineStatusArquivo(arquivoIndice, '1');
-    
-//     free(vetorIndice);
-//     free(cabecalho);
-//     fclose(arqPessoa);
-//     fclose(arquivoIndice);
-    
-//     binarioNaTela(nomeArquivoPessoa);
-//     binarioNaTela(nomeArquivoIndice);
-// }
-
-
 //FUNCIONALIDADE 7:
 void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //Abertura dos arquivos
@@ -578,13 +458,13 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     
     //Aloca espaço EXTRA para o vetor (pode aumentar durante atualizações)
     int capacidadeIndice = qtdInicial + n + 10;
-    indice *vetorIndice = malloc(capacidadeIndice * sizeof(indice));
+    noIndice *vetorIndice = malloc(capacidadeIndice * sizeof(noIndice));
     
     //Carrega o índice em memória primária
     fseek(arquivoIndice, 12, SEEK_SET); //pula o cabeçalho
     for(int i = 0; i < qtdInicial; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
+        fread(&vetorIndice[i].byteoffset, sizeof(long int), 1, arquivoIndice);
     }
     
     //obtém o tamanho do arquivo pessoa
@@ -697,7 +577,7 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //escreve os índices
     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fwrite(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fwrite(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
+        fwrite(&vetorIndice[i].byteoffset, sizeof(long int), 1, arquivoIndice);
     }
     
     //atualiza o cabeçalho do arquivo pessoa
@@ -722,12 +602,13 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
 // FUNCIONALIDADE 8:
 void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue){
     //para cada linha lida no arquivo csv, temos uma inserção no arquivo segue
+    //abrindo arquivo de entrada csv apenas para leitura
     FILE *arqEntrada = fopen(nomeArquivoEntradaSegue, "r");
     if(arqEntrada == NULL){
         puts("Falha no processamento do arquivo.");
         return;
     }
-    //abrindo arquivo segue para escrita+leitura, já que precisamos atualizar o cabeçalho a cada inserção:
+    //abrindo arquivo segue(binário) para escrita+leitura, já que precisamos atualizar o cabeçalho a cada inserção, então o ponteiro do arquivo vai pra lá e pra cá:
     FILE *arqSegue = fopen(nomeArquivoSaidaSegue, "wb+");
     if(arqSegue == NULL){
         puts("Falha no processamento do arquivo.");
@@ -752,9 +633,9 @@ void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue
     //proxRRN começa em 0:
     proxRRN = 0;
 
-    //lê até a última linha do arquivo csv, o formato é: 186,117,03/05/2020,23/09/2020,0
+    //lê até a última linha do arquivo csv, o formato de uma linha é: 186,117,03/05/2020,23/09/2020,0
     while(fgets(bufferLinha, sizeof(bufferLinha), arqEntrada) != NULL){
-        noSegue *noAtual = malloc(sizeof(noSegue)); //criando um nó para o registro lido
+        noSegue *noAtual = malloc(sizeof(noSegue)); //criando um nó para o registro lido do csv
         noAtual->dataInicioQueSegue = malloc(11 * sizeof(char)); //alocando memória para a string de data de inicio
         noAtual->dataFimQueSegue = malloc(11 * sizeof(char)); //alocando memória para a string de data de fim
 
@@ -764,29 +645,31 @@ void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue
         //criando ponteiro que aponta para o buffer que armazena a linha(necessário para strsep)
         char *str = bufferLinha;
 
-        noAtual->removido[0] = '0';
+        noAtual->removido[0] = '0'; //quando um registro é criado, ele não está marcado como logicamente removido
         noAtual->removido[1] = '\0';
+        //separa a linha lida em campos do registro segue
         char *idQueSegue = meu_strsep(&str, ",");
         char *idQueSeguida = meu_strsep(&str, ",");
         char *dataInicio = meu_strsep(&str, ",");
         char *dataFim = meu_strsep(&str, ",");
         char *grau = meu_strsep(&str, ",");
 
-        noAtual->idPessoaQueSegue = atoi(idQueSegue);
-        noAtual->idPessoaQueESeguida = atoi(idQueSeguida);
+        noAtual->idPessoaQueSegue = atoi(idQueSegue); //converte id que segue
+        noAtual->idPessoaQueESeguida = atoi(idQueSeguida); //converte id que é seguida
 
+        //verifica se data de inicio é diferente de null, se for escreve a data lida, se não escreve lixo
         if(dataInicio != NULL && dataInicio[0] != '\0'){
             strcpy(noAtual->dataInicioQueSegue, dataInicio);
         } else{
             strcpy(noAtual->dataInicioQueSegue, "$$$$$$$$$$");
         }
-
+        //verifica se data de fim é diferente de null, se for escreve a data lida, se não escreve lixo
         if(dataFim != NULL && dataFim[0] != '\0'){
             strcpy(noAtual->dataFimQueSegue, dataFim);
         } else{
             strcpy(noAtual->dataFimQueSegue, "$$$$$$$$$$");
         }
-
+        //se o grau lido for diferente de nulo, escrevemos ele, se não escreve lixo
         if(grau != NULL && grau[0] != '\0'){
             // Remove espaços e \n
             while(*grau && isspace((unsigned char)*grau)) grau++;
@@ -812,50 +695,26 @@ void criaArquivoSegue(char *nomeArquivoEntradaSegue, char *nomeArquivoSaidaSegue
         //feitas as verificações e leituras:
         quantidadeRegistros++;
         proxRRN++;
-        proxByteOffset += 30;
+        proxByteOffset += 30; //todo registro tem o mesmo tamanho no arquivo binário segue
 
         //agora atualiza o cabeçalho:
-        fseek(arqSegue, 1, SEEK_SET); //posiciona o ponteiro em qtdpessoas
+        fseek(arqSegue, 1, SEEK_SET); //posiciona o ponteiro em qtdregistros
         fwrite(&quantidadeRegistros, sizeof(int), 1, arqSegue);
         fwrite(&proxRRN, sizeof(int), 1, arqSegue);
-        fflush(arqSegue);
+        fflush(arqSegue); //força escrita
 
-        //a cada loop, desaloca a memória do nó e das strings
+        //a cada loop, desaloca a memória do nó e das strings para usar novamente
         free(noAtual->dataInicioQueSegue);
         free(noAtual->dataFimQueSegue);
         free(noAtual);
     }
 
     //quando acabar, atualiza status, fecha o arquivo e executa binário na tela:
+
     //printando variáveis do cabeçalho pra ver se deu certo:
     // printf("\n\nquantidade pessoas: %d\nproxRRN: %d\n", quantidadeRegistros, proxRRN);
 
     defineStatusArquivo(arqSegue, '1');
-
-    //print para debug
-    // fseek(arqSegue, 0, SEEK_SET);
-    // char statusVerifica;
-    // int qtdVerifica;
-    // int proxByteOffsetVerifica;
-
-    // fread(&statusVerifica, sizeof(char), 1, arqSegue);
-    // fread(&qtdVerifica, sizeof(int), 1, arqSegue);
-    // fread(&proxByteOffsetVerifica, sizeof(int), 1, arqSegue);
-
-    // printf("\n\n=== VERIFICAÇÃO DO CABEÇALHO ===\n");
-    // printf("Status escrito: '1', lido: '%c' %s\n", 
-    //     statusVerifica, 
-    //     statusVerifica == '1' ? "OK" : "NOK");
-
-    // printf("Qtd escrita: %d, lida: %d %s\n", 
-    //     quantidadeRegistros, 
-    //     qtdVerifica,
-    //     qtdVerifica == quantidadeRegistros ? "OK" : "NOK");
-
-    // printf("proxByteOffset escrito: %d, lido: %d %s\n", 
-    //     proxByteOffset, 
-    //     proxByteOffsetVerifica,
-    //     proxByteOffsetVerifica == proxByteOffset ? "OK" : "NOK");
 
     fclose(arqSegue);
 
@@ -884,7 +743,7 @@ void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado)
     //debug ->printa se leu a quantidade de registros certa:
     // printf("Qtd registros lido: %d\n", qtdRegistros);
     
-    //será criado um vetor da estrutura de dados do tipo noSegue
+    //será criado um vetor da estrutura de dados do tipo noSegue para ler todos os registros
     noSegue *registros = (noSegue*)calloc(qtdRegistros, sizeof(noSegue));
     
     //o nó tem essa estrutura:
@@ -896,7 +755,6 @@ void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado)
     // char grauAmizade[2];
 
     //loop para ler todos os registros do arquivo segue
-
     fseek(arqDesordenado, 9, SEEK_SET); // coloca o byteoffset no primeiro registro
     for(int i = 0; i < qtdRegistros; i++){
         registros[i].dataInicioQueSegue = malloc(11 * sizeof(char));
@@ -927,10 +785,9 @@ void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado)
     FILE *arqOrdenado = fopen(nomeArquivoOrdenado, "wb+");
     if(arqOrdenado == NULL){
         puts("Falha no processamento do arquivo.");
-        free(arqOrdenado);
         return;
     }
-    escreveSegueOrdenado(arqOrdenado, qtdRegistros, registros);//função que escreve tudo no arquivo de dados
+    escreveSegueOrdenado(arqOrdenado, qtdRegistros, registros);//função que escreve tudo no arquivo de dados segue ordenado
 
     //atualiza status
     defineStatusArquivo(arqOrdenado, '1');
@@ -939,7 +796,7 @@ void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado)
     //fecha arquivos e mostra binário na tela:
     fclose(arqDesordenado); //fecha arquivo desordenado
     fclose(arqOrdenado); //fecha arquivo ordenado
-    binarioNaTela(nomeArquivoOrdenado);
+    binarioNaTela(nomeArquivoOrdenado);//binário na tela do arquivo ordenado
 
 
     //desalocando memória usada para os nós
@@ -950,7 +807,6 @@ void ordenaArquivoSegue(char *nomeArquivoDesordenado, char *nomeArquivoOrdenado)
     }
     free(registros);
 }
-
 
 //FUNCIONALIDADE 10
 void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nomeArquivoOrdenado, int n){
@@ -965,10 +821,10 @@ void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nome
     int qtdIndice = sizeIndice / (sizeof(int) + sizeof(long int));
     
     fseek(arquivoIndice, 12, SEEK_SET);
-    indice *vetorIndice = malloc(qtdIndice * sizeof(indice));
+    noIndice *vetorIndice = malloc(qtdIndice * sizeof(noIndice));
     for(int i = 0; i < qtdIndice; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-        fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
+        fread(&vetorIndice[i].byteoffset, sizeof(long int), 1, arquivoIndice);
     }
     fclose(arquivoIndice);
     

@@ -16,7 +16,10 @@ static int quantidadePessoas = 0;
 static int quantidadeRemovidos = 0;
 static long int proxByteoffset = 17;
 
-//FUNÇÕES PARA FUNCIONALIDADE 2
+
+
+
+// ======================= FUNÇÕES PARA FUNCIONALIDADE 2 =======================
 
 //essa função lê o arquivo csv, faz a inserção no arquivo de dados a cada linha lida do csv, e vai montando a lista duplamente encadeada para o índice ser inserido depois no arquivo de índice
 void lerCSV(FILE* arquivoDados, FILE* arquivoIndice, FILE* arquivoEntrada){
@@ -293,7 +296,9 @@ void criarNoRegistroIndice(indice* novoRegistroIndice, char *campoIdPessoa, long
 }
 
 
-//funções para as funcionalidades 3 e 4
+
+
+// ======================= FUNÇÕES PARA FUNCIONALIDADES 3 E 4 =======================
 
 // Função genérica para abrir arquivo, verificar erro e checar status
 FILE* abrirArquivoComStatus(const char *nomeArquivo, const char *modo) {
@@ -371,108 +376,7 @@ void liberarListaResultados(resultadoBusca *raizLista){
   }
 }
 
-// resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo){
-//   //inicializa a lista de resultados
-//   resultadoBusca *raizListaResultados = NULL;
-//   resultadoBusca *ultimoResultado = NULL;
-//   struct registro_2 reg;
-  
-
-//   if(strcmp(nomeCampo, "idPessoa") == 0){
-//     int idBusca = atoi(valorCampo);
-//     long int offset = buscaBinariaIndice(vetorIndice, qtdIndice, idBusca);
-    
-//     if(offset != -1){
-//       fseek(arqPessoa, offset, SEEK_SET);
-      
-//       char removido;
-//       fread(&removido, sizeof(char), 1, arqPessoa);
-      
-//       //adiciona se o registro não estiver removido
-//       if(removido == '0'){
-//         int tamRegistro;
-//         fread(&tamRegistro, sizeof(int), 1, arqPessoa);
-        
-//         fread(&reg.idPessoa, sizeof(int), 1, arqPessoa);
-//         fread(&reg.idadePessoa, sizeof(int), 1, arqPessoa);
-//         fread(&reg.tamNomePessoa, sizeof(int), 1, arqPessoa);
-//         fread(reg.nomePessoa, sizeof(char), reg.tamNomePessoa, arqPessoa);
-//         reg.nomePessoa[reg.tamNomePessoa] = '\0';
-//         fread(&reg.tamNomeUsuario, sizeof(int), 1, arqPessoa);
-//         fread(reg.nomeUsuario, sizeof(char), reg.tamNomeUsuario, arqPessoa);
-//         reg.nomeUsuario[reg.tamNomeUsuario] = '\0';
-        
-//         adicionarResultadoBusca(&raizListaResultados, &ultimoResultado, &reg, offset);
-//       }
-//     }
-//   } else{
-//     fseek(arqPessoa, 17, SEEK_SET); //pula o cabeçalho
-//     while(ftell(arqPessoa) < sizeDados){
-//       long int offsetAtual = ftell(arqPessoa);
-      
-//       char removido;
-//       fread(&removido, sizeof(char), 1, arqPessoa);
-//       int tamRegistro;
-//       fread(&tamRegistro, sizeof(int), 1, arqPessoa);
-//       if (removido == '1') {
-//           fseek(arqPessoa, tamRegistro, SEEK_CUR);
-//           continue;
-//       }
-//       //lê os campos do registro
-//       fread(&reg.idPessoa, sizeof(int), 1, arqPessoa);
-//       fread(&reg.idadePessoa, sizeof(int), 1, arqPessoa);
-//       fread(&reg.tamNomePessoa, sizeof(int), 1, arqPessoa);
-//       fread(reg.nomePessoa, sizeof(char), reg.tamNomePessoa, arqPessoa);
-//       reg.nomePessoa[reg.tamNomePessoa] = '\0';        
-//       fread(&reg.tamNomeUsuario, sizeof(int), 1, arqPessoa);
-//       fread(reg.nomeUsuario, sizeof(char), reg.tamNomeUsuario, arqPessoa);
-//       reg.nomeUsuario[reg.tamNomeUsuario] = '\0';
-      
-//       //compara o campo solicitado com o valor buscado
-//       int encontrado = 0;
-//       if(strcmp(nomeCampo, "idadePessoa") == 0){
-//         if(strlen(valorCampo) == 0){
-//           if(reg.idadePessoa == -1){
-//             encontrado = 1;
-//           }
-//         } else {
-//           if(reg.idadePessoa == atoi(valorCampo)){
-//             encontrado = 1;
-//           }
-//         }
-//       }
-//       else if(strcmp(nomeCampo, "nomePessoa") == 0){
-//         if(strlen(valorCampo) == 0){
-//           if(reg.tamNomePessoa == 0){
-//             encontrado = 1;
-//           }
-//         } else {
-//           if(strcmp(reg.nomePessoa, valorCampo) == 0){
-//             encontrado = 1;
-//           }
-//         }
-//       }
-//       else if(strcmp(nomeCampo, "nomeUsuario") == 0){
-//         if(strlen(valorCampo) == 0){
-//           if(reg.tamNomeUsuario == 0){
-//             encontrado = 1;
-//           }
-//         } else {
-//           if(strcmp(reg.nomeUsuario, valorCampo) == 0){
-//             encontrado = 1;
-//           }
-//         }
-//       }
-//       if(encontrado){
-//         adicionarResultadoBusca(&raizListaResultados, &ultimoResultado, &reg, offsetAtual);
-//       }
-//     }
-//   }
-  
-//   return raizListaResultados;
-// }
-
-resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo){
+resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, noIndice *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo){
   //inicializa a lista de resultados
   resultadoBusca *raizListaResultados = NULL;
   resultadoBusca *ultimoResultado = NULL;
@@ -480,8 +384,13 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, in
   
   if(strcmp(nomeCampo, "idPessoa") == 0){
     int idBusca = atoi(valorCampo);
-    long int offset = buscaBinariaIndice(vetorIndice, qtdIndice, idBusca);
-    
+    long int offset;
+    int posRetornada = buscaBinariaVetorIndice(vetorIndice, qtdIndice, idBusca);
+    if(posRetornada < 0){
+      offset = -1;
+    } else{
+      offset = vetorIndice[posRetornada].byteoffset;
+    }
     if(offset != -1){
       fseek(arqPessoa, offset, SEEK_SET);
       
@@ -577,26 +486,6 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, in
   return raizListaResultados;
 }
 
-//busca binaria para o tipo indice (com ponteiros)
-long int buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado){
-    int inicio = 0;
-    int fim = tamanho - 1;
-
-    while (inicio <= fim){
-        int meio = (inicio + fim)/2;
-
-        if(vetor[meio].idPessoa == idBuscado){
-            return vetor[meio].byteOffset;
-        } else if (vetor[meio].idPessoa < idBuscado){
-            inicio = meio + 1;
-        } else{
-            fim = meio - 1;
-        }
-    }
-    //se nao encontrar o indice fornecido
-    return -1;
-}
-
 //imprimir registro encontrado por byteOffset
 void imprimirRegistroPorByteOffset(FILE *arqPessoa, long int byteOffset, struct registro_2 reg){
     //posiciona o ponteiro no registro 
@@ -627,7 +516,9 @@ void imprimirRegistroPorByteOffset(FILE *arqPessoa, long int byteOffset, struct 
 }
 
 
-// FUNÇÕES PARA FUNCIONALIDADE 6:
+
+
+// ======================= FUNÇÕES PARA FUNCIONALIDADE 6: =======================
 
 cabecalhoPessoa* lerCabecalho(FILE *nomeArquivo){
   cabecalhoPessoa *cabecalho = calloc(1, sizeof(cabecalhoPessoa)); //aloca memória para o cabecalho
@@ -751,7 +642,11 @@ noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n){
 void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, long int byteoffset){
   //o conceito de busca binária é utilizado para retornar uma posição válida em que o registro pode ser inserido
   int pos = buscaBinariaVetorIndice(indices, tamanhoVetor, idPessoa);
-  
+  //vai retornar um valor negativo, já que a busca binária vai retornar a posição onde o id deveria estar, logo precisamos converter pra positivo e subtrair 1
+  //exemplo: retorna -3(deveria estar na posição 2), então pos = -pos -1
+  if(pos < 0){
+    pos = -(pos) -1;
+  }
   //desloca tudo até a posição
   for (int i = tamanhoVetor; i > pos; i--){
     indices[i] = indices[i-1];
@@ -759,46 +654,6 @@ void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idP
   indices[pos].idPessoa = idPessoa;
   indices[pos].byteoffset = byteoffset;
   //feito isso, o vetor está atualizado e 100% pronto para voltar para memória secundária
-}
-
-// Retorna a posição onde o idPessoa deve ser inserido para manter o vetor ordenado. Se o idPessoa já existir, retorna -1
-int buscaBinariaVetorIndice(noIndice* indices, int tamanho, int idPessoa) {
-    int inicio = 0;
-    int fim = tamanho - 1;
-    
-    // Caso especial: vetor vazio
-    if (tamanho == 0) {
-        return 0;
-    }
-    
-    // Caso especial: inserir no início
-    if (idPessoa < indices[0].idPessoa) {
-        return 0;
-    }
-    
-    // Caso especial: inserir no final
-    if (idPessoa > indices[fim].idPessoa) {
-        return tamanho;
-    }
-    
-    // Busca binária
-    while (inicio <= fim) {
-        int meio = inicio + (fim - inicio) / 2;
-        
-        if (indices[meio].idPessoa == idPessoa) {
-            // ID já existe! Retorna -1 para indicar erro
-            return -1;
-        }
-        else if (indices[meio].idPessoa < idPessoa) {
-            inicio = meio + 1;
-        }
-        else {
-            fim = meio - 1;
-        }
-    }
-    
-    // A posição de inserção é retornada
-    return inicio;
 }
 
 void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
@@ -814,10 +669,12 @@ void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
 }
 
 
-//FUNÇÕES PARA FUNCIONALIDADE 7:
+
+
+// ======================= FUNÇÕES PARA FUNCIONALIDADE 7: =======================
 
 //função auxiliar para atualizar um registro individual
-void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual){
+void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, noIndice *vetorIndice, int idPessoaAtual){
     //posiciona no registro
     fseek(arqPessoa, posRegistro, SEEK_SET);
     
@@ -853,8 +710,11 @@ void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *no
 
     if(strcmp(nomeCampoAtualiza, "idPessoa") == 0){
       novoId = atoi(valorCampoAtualiza);
-      int pos = buscaBinariaAtualizar(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
-      vetorIndice[pos].idPessoa = novoId;
+      int pos = buscaBinariaVetorIndice(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
+      //vai retornar a posição onde o id esta, porque ele existe, então se pos > 0, id existe e retorna a posição correta
+      if(pos >= 0){
+        vetorIndice[pos].idPessoa = novoId;
+      }
     }
     
     if(strcmp(nomeCampoAtualiza, "idadePessoa") == 0){
@@ -945,8 +805,15 @@ void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *no
         fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
         
         //adiciona ao índice na posição ordenada correta
-        int pos = buscaBinariaAtualizar(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
-        
+        int pos = buscaBinariaVetorIndice(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
+        //vai retornar um valor negativo, já que a busca binária vai retornar a posição onde o id deveria estar, logo precisamos converter pra positivo e subtrair 1
+        //exemplo: retorna -3(deveria estar na posição 2), então pos = -pos -1
+        if(pos >= 0){
+          // puts("ID ja existe");
+        } else{
+          pos = -(pos) - 1;
+        }
+
         //desloca para abrir espaço
         for(int j = cabecalho->quantidadePessoas; j > pos; j--){
             vetorIndice[j] = vetorIndice[j-1];
@@ -954,7 +821,7 @@ void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *no
         
         //insere o novo índice
         vetorIndice[pos].idPessoa = idPessoa;
-        vetorIndice[pos].byteOffset = cabecalho->proxByteoffset;
+        vetorIndice[pos].byteoffset = cabecalho->proxByteoffset;
         
         //atualiza o cabeçalho
         cabecalho->proxByteoffset += novoTamRegistro + 5;
@@ -964,32 +831,9 @@ void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *no
 }
 
 
-int buscaBinariaAtualizar(indice* vetorIndice, int tamanho, int idPessoa){
-    int inicio = 0;
-    int fim = tamanho - 1;
-    
-    if (tamanho == 0) return 0;
-    if (idPessoa < vetorIndice[0].idPessoa) return 0;
-    if (idPessoa > vetorIndice[fim].idPessoa) return tamanho;
-    
-    while (inicio <= fim) {
-        int meio = inicio + (fim - inicio) / 2;
-        
-        if (vetorIndice[meio].idPessoa == idPessoa) {
-            return meio;
-        }
-        else if (vetorIndice[meio].idPessoa < idPessoa) {
-            inicio = meio + 1;
-        }
-        else {
-            fim = meio - 1;
-        }
-    }
-    
-    return inicio;
-}
 
-//FUNÇÕES PARA A FUNCIONALIDADE 8:
+
+// ======================= FUNÇÕES PARA A FUNCIONALIDADE 8: =======================
 
 void criaCabecalhoArquivoSegue(FILE *arqSegue, char status, int quantidadeRegistros, int proxByteoffset){
   //o arquivo já está aberto, é só posicionar o ponteiro e escrever
@@ -1011,7 +855,9 @@ void insereArquivoSegue(FILE *arqSegue, noSegue *noAtual){
 }
 
 
-//FUNÇÕESP PARA A FUNCIONALIDADE 9:
+
+
+//======================= FUNÇÕESP PARA A FUNCIONALIDADE 9: =======================
 
 int comparaParaOrdenar(const void *a, const void *b){
   const noSegue *noA = (const noSegue*)a;
@@ -1076,7 +922,10 @@ void escreveSegueOrdenado(FILE *arqOrdenado, int sizeArray, noSegue *registros){
 }
 
 
-//FUNÇÕES PARA A FUNCIONALIDADE 10:
+
+
+// ======================= FUNÇÕES PARA A FUNCIONALIDADE 10: =======================
+
 //Busca binária modificada que retorna a primeira ocorrência do idPessoaQueSegue
 long int buscaBinariaSegueModificada(noSegue *registros, int tamanho, int idPessoaBuscado){
   if(tamanho == 0) return -1;
@@ -1185,7 +1034,54 @@ void imprimirJuncao(int idPessoa, int idadePessoa, int tamNomePessoa, char *nome
   printf("\n");
 }
 
-// funções gerais
+
+
+
+// ===================================== funções gerais =====================================
+
+/* Retorna:
+  se ID existe: retorna a POSIÇÃO onde está (>= 0)
+  se ID não existe: retorna -(posição_inserção + 1)
+  exemplo: retorna -3 significa "não existe, deveria estar na posição 2", retorna assim porque se deve estar na posição 0, não posso retornar 0 se não confunde com a posição de um id existente, deve ser um valor negativo sempre que retornar a posição onde deveria estar o id buscado
+*/
+int buscaBinariaVetorIndice(noIndice* indices, int tamanho, int idPessoa) {
+    int inicio = 0;
+    int fim = tamanho - 1;
+    
+    // caso especial: vetor vazio
+    if (tamanho == 0) {
+        return -1;  // deveria inserir na posição 0 → retorna -(0+1) = -1
+    }
+    
+    // caso especial: menor que o primeiro
+    if (idPessoa < indices[0].idPessoa) {
+        return -1;  // deveria inserir na posição 0 → retorna -(0+1) = -1
+    }
+    
+    // caso especial: maior que o último
+    if (idPessoa > indices[fim].idPessoa) {
+        return -(tamanho + 1);  // deveria inserir na posição 'tamanho'
+    }
+    
+    // busca binaria
+    while (inicio <= fim) {
+        int meio = inicio + (fim - inicio) / 2;
+        
+        if (indices[meio].idPessoa == idPessoa) {
+            return meio;  // id existe, então retorna a posição em que ele esta no vetor
+        }
+        else if (indices[meio].idPessoa < idPessoa) {
+            inicio = meio + 1;
+        }
+        else {
+            fim = meio - 1;
+        }
+    }
+    
+    // não encontrou o id requerido, então retorna -(posição_inserção + 1)
+    return -(inicio + 1);
+}
+
 char *meu_strsep(char** buffer, const char* delim) {
     char* inicio = *buffer;
     char* p;
