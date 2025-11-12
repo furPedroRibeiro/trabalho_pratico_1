@@ -100,9 +100,10 @@ void criarArquivoDados(char *nomeArquivoEntrada, char *nomeArquivoDados, char *n
     binarioNaTela(nomeArquivoIndice);
 }
 
+//FUNCIONALIDADE 3:
 //Definição da variável global
 //struct registro_2 reg;
-//FUNCIONALIDADE 3:
+
 void listarRegistros(char *nomeArquivoEntrada) {
     FILE *arqPessoa = abrirArquivoComStatus(nomeArquivoEntrada, "rb");
     
@@ -110,20 +111,14 @@ void listarRegistros(char *nomeArquivoEntrada) {
     fseek(arqPessoa, 0, SEEK_END);
     long sizeDados = ftell(arqPessoa);
     
-    //Buscar todos os registros
+    //Buscar todos os registros - enviamos para a função modular de busca imprimir todos os registros 
+    //os campos são enviados como nulo pois não temos como objetivo fazer uma busca específica, e sim printar todos os resultados
     resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, NULL, 0, sizeDados, NULL, NULL);
     
     //Percorrer a lista de resultados e imprimir
     resultadoBusca *atual = resultados;
     while (atual != NULL) {
-        imprimirRegistro(
-            atual->reg->idPessoa, 
-            atual->reg->idadePessoa, 
-            atual->reg->tamanhoNomePessoa, 
-            atual->reg->nome, 
-            atual->reg->tamanhoNomeUsuario, 
-            atual->reg->nomeUsuario
-        );
+        imprimirRegistro(atual->reg->idPessoa, atual->reg->idadePessoa, atual->reg->tamanhoNomePessoa, atual->reg->nome, atual->reg->tamanhoNomeUsuario, atual->reg->nomeUsuario);
         atual = atual->proxResultado;
     }
     
@@ -237,6 +232,9 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         scanf(" %[^=]", nomeCampo);
         getchar(); // Consome o '='
         
+        //função para tratamento de string, foi necessário criar uma nova função pois como os valores podem
+        //ser passados no modelo idadePessoa=NULO ou nomePessoa=NULO, a função scan_quote_string não tratava corretamente
+        //pois o valor do campo, ou seja o nulo, era recebido sem aspas 
         //verifica se o valor tem aspas ou não
         char c = getchar();
         if(c == '"'){
@@ -256,6 +254,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
             valorCampo[j] = '\0';
         }
         
+        //por segurança, trocamos o que recebemos da função acima por ""
         if(strcmp(valorCampo, "NULO") == 0){
             strcpy(valorCampo, "");
         }
@@ -273,6 +272,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
                 fwrite(&removido, sizeof(char), 1, arqPessoa);
                 fflush(arqPessoa);
                 
+                //guarda os ids que precisam ser removidos do arquivo de indice
                 idsParaRemover[qtdIdsParaRemover++] = atual->reg->idPessoa;
                 
                 atual = atual->proxResultado;
@@ -430,15 +430,14 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     fread(&cabecalho->proxByteoffset, sizeof(long int), 1, arqPessoa);
     cabecalho->status[1] = '\0';
     
-    int qtdInicial = cabecalho->quantidadePessoas;
     
     //Aloca espaço extra para o vetor
-    int capacidadeIndice = qtdInicial + n + 10;
+    int capacidadeIndice = cabecalho->quantidadePessoas + n + 10;
     indice *vetorIndice = malloc(capacidadeIndice * sizeof(indice));
     
     //Carrega o índice em memória primária
     fseek(arquivoIndice, 12, SEEK_SET); //pula o cabeçalho
-    for(int i = 0; i < qtdInicial; i++){
+    for(int i = 0; i < cabecalho->quantidadePessoas; i++){
         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
         fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
     }
@@ -512,16 +511,14 @@ void atualizarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         //Processa todos os registros encontrados
         if(resultados != NULL){
             resultadoBusca *atual = resultados;
-            
             while(atual != NULL){
+                //chama a função que atualiza os registros individualmente
                 atualizarRegistroIndividual(arqPessoa, atual->byteOffset, nomeCampoAtualiza, valorCampoAtualiza, cabecalho, vetorIndice, atual->reg->idPessoa);
                 atual = atual->proxResultado;
             }
-            
             //Libera a lista de resultados
             liberarListaResultados(resultados);
         }
-        
         //atualiza sizeDados após processar todos os resultados desta iteração
         fseek(arqPessoa, 0, SEEK_END);
         sizeDados = ftell(arqPessoa);
@@ -844,6 +841,7 @@ void juncaoArquivos(char *nomeArquivoPessoa, char *nomeArquivoIndice, char *nome
             //percorre todos os resultados encontrados
             resultadoBusca *atual = resultados;
             while(atual != NULL){
+                //chama a função imprimir junção
                 imprimirJuncao(atual->reg->idPessoa, atual->reg->idadePessoa, atual->reg->tamanhoNomePessoa, atual->reg->nome,  atual->reg->tamanhoNomeUsuario, atual->reg->nomeUsuario,  registrosSegue, qtdRegistrosSegue, atual->reg->idPessoa);
                 atual = atual->proxResultado;
             }

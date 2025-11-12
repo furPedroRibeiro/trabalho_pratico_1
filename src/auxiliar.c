@@ -305,6 +305,7 @@ FILE* abrirArquivoComStatus(const char *nomeArquivo, const char *modo) {
     FILE *arquivo = fopen(nomeArquivo, modo);
     if (arquivo == NULL) {
         puts("Falha no processamento do arquivo.");
+        fclose(arquivo);
         exit(0);
     }
 
@@ -500,17 +501,11 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, in
         }
       }
       else if(strcmp(nomeCampo, "nomeUsuario") == 0){
-        if(strlen(valorCampo) == 0){
-          if(reg.tamanhoNomeUsuario == 0){
-            encontrado = 1;
-          }
-        } else {
-          if(strcmp(reg.nomeUsuario, valorCampo) == 0){
-            encontrado = 1;
-          }
+        if(strcmp(reg.nomeUsuario, valorCampo) == 0){
+          encontrado = 1;
         }
       }
-      if(encontrado){
+      if(encontrado == 1){
         adicionarResultadoBusca(&raizListaResultados, &ultimoResultado, &reg, offsetAtual);
       }
       
@@ -714,159 +709,159 @@ void insereIndice(indice* indices, FILE *nomeArquivoIndice, int tamanho){
 
 //função auxiliar para atualizar um registro individual
 void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual){
-    //posiciona no registro
+  //posiciona no registro
+  fseek(arqPessoa, posRegistro, SEEK_SET);
+  
+  //lê o registro completo
+  char removido;
+  int tamRegistroAtual;
+  fread(&removido, sizeof(char), 1, arqPessoa);
+  fread(&tamRegistroAtual, sizeof(int), 1, arqPessoa);
+  
+  int idPessoa, idadePessoa, tamNomePessoa, tamNomeUsuario;
+  char nomePessoa[100] = "";
+  char nomeUsuario[100] = "";
+  
+  fread(&idPessoa, sizeof(int), 1, arqPessoa);
+  fread(&idadePessoa, sizeof(int), 1, arqPessoa);
+  fread(&tamNomePessoa, sizeof(int), 1, arqPessoa);
+  fread(nomePessoa, sizeof(char), tamNomePessoa, arqPessoa);
+  nomePessoa[tamNomePessoa] = '\0';
+  fread(&tamNomeUsuario, sizeof(int), 1, arqPessoa);
+  fread(nomeUsuario, sizeof(char), tamNomeUsuario, arqPessoa);
+  nomeUsuario[tamNomeUsuario] = '\0';
+
+  //Aplica a atualização nos valores
+  int novoId = idPessoa;
+  int novoTamNomePessoa = tamNomePessoa;
+  int novoTamNomeUsuario = tamNomeUsuario;
+  int novaIdadePessoa = idadePessoa;
+  char novoNomePessoa[100];
+  char novoNomeUsuario[100];
+  
+  strcpy(novoNomePessoa, nomePessoa);
+  strcpy(novoNomeUsuario, nomeUsuario);
+
+  if(strcmp(nomeCampoAtualiza, "idPessoa") == 0){
+    novoId = atoi(valorCampoAtualiza);
+    int pos = buscaBinariaVetorIndice(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
+    //vai retornar a posição onde o id esta, porque ele existe, então se pos > 0, id existe e retorna a posição correta
+    if(pos >= 0){
+      vetorIndice[pos].idPessoa = novoId;
+    }
+  }
+  
+  if(strcmp(nomeCampoAtualiza, "idadePessoa") == 0){
+    if(strcmp(valorCampoAtualiza, "NULO") == 0){
+      novaIdadePessoa = -1;
+    } else {
+      novaIdadePessoa = atoi(valorCampoAtualiza);
+    }
+  }
+  else if(strcmp(nomeCampoAtualiza, "nomePessoa") == 0){
+    if(strcmp(valorCampoAtualiza, "NULO") == 0){
+      novoTamNomePessoa = 0;
+      novoNomePessoa[0] = '\0';
+    } else {
+      strcpy(novoNomePessoa, valorCampoAtualiza);
+      novoTamNomePessoa = strlen(valorCampoAtualiza);
+    }
+  }
+  else if(strcmp(nomeCampoAtualiza, "nomeUsuario") == 0){
+    strcpy(novoNomeUsuario, valorCampoAtualiza);
+    novoTamNomeUsuario = strlen(valorCampoAtualiza);
+  }
+  
+  //calcula o novo tamanho do registro
+  int novoTamRegistro = 16 + novoTamNomePessoa + novoTamNomeUsuario;
+  
+  if(novoTamRegistro <= tamRegistroAtual){
+    //Caso 1: inserir com lixo
+    //o novo registro cabe no espaço atual
+    
+    fseek(arqPessoa, posRegistro + 5, SEEK_SET); //Pula removido e tamRegistro
+    
+    //escreve os campos atualizados
+    fwrite(&novoId, sizeof(int), 1, arqPessoa);
+    fwrite(&novaIdadePessoa, sizeof(int), 1, arqPessoa);
+    fwrite(&novoTamNomePessoa, sizeof(int), 1, arqPessoa);
+    fwrite(novoNomePessoa, sizeof(char), novoTamNomePessoa, arqPessoa);
+    fwrite(&novoTamNomeUsuario, sizeof(int), 1, arqPessoa);
+    fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
+    
+    //preenche o resto com lixo '$'
+    int bytesEscritos = 16 + novoTamNomePessoa + novoTamNomeUsuario;
+    int bytesLixo = tamRegistroAtual - bytesEscritos;
+    
+    for(int j = 0; j < bytesLixo; j++){
+      char lixo = '$';
+      fwrite(&lixo, sizeof(char), 1, arqPessoa);
+    }
+    
+    fflush(arqPessoa);
+    
+  } else {
+    //Caso 2: remover logicamente e inserir novo registro
+    //o novo registro não cabe no espaço atual
+    
+    //marca o registro atual como removido
     fseek(arqPessoa, posRegistro, SEEK_SET);
+    char marcaRemovido = '1';
+    fwrite(&marcaRemovido, sizeof(char), 1, arqPessoa);
+    fflush(arqPessoa);
     
-    //lê o registro completo
-    char removido;
-    int tamRegistroAtual;
-    fread(&removido, sizeof(char), 1, arqPessoa);
-    fread(&tamRegistroAtual, sizeof(int), 1, arqPessoa);
-    
-    int idPessoa, idadePessoa, tamNomePessoa, tamNomeUsuario;
-    char nomePessoa[100] = "";
-    char nomeUsuario[100] = "";
-    
-    fread(&idPessoa, sizeof(int), 1, arqPessoa);
-    fread(&idadePessoa, sizeof(int), 1, arqPessoa);
-    fread(&tamNomePessoa, sizeof(int), 1, arqPessoa);
-    fread(nomePessoa, sizeof(char), tamNomePessoa, arqPessoa);
-    nomePessoa[tamNomePessoa] = '\0';
-    fread(&tamNomeUsuario, sizeof(int), 1, arqPessoa);
-    fread(nomeUsuario, sizeof(char), tamNomeUsuario, arqPessoa);
-    nomeUsuario[tamNomeUsuario] = '\0';
-
-    //Aplica a atualização nos valores
-    int novoId = idPessoa;
-    int novoTamNomePessoa = tamNomePessoa;
-    int novoTamNomeUsuario = tamNomeUsuario;
-    int novaIdadePessoa = idadePessoa;
-    char novoNomePessoa[100];
-    char novoNomeUsuario[100];
-    
-    strcpy(novoNomePessoa, nomePessoa);
-    strcpy(novoNomeUsuario, nomeUsuario);
-
-    if(strcmp(nomeCampoAtualiza, "idPessoa") == 0){
-      novoId = atoi(valorCampoAtualiza);
-      int pos = buscaBinariaVetorIndice(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
-      //vai retornar a posição onde o id esta, porque ele existe, então se pos > 0, id existe e retorna a posição correta
-      if(pos >= 0){
-        vetorIndice[pos].idPessoa = novoId;
+    //remove do índice
+    for(int j = 0; j < cabecalho->quantidadePessoas; j++){
+      if(vetorIndice[j].idPessoa == idPessoaAtual){
+        // Desloca todos os elementos para a esquerda
+        for(int k = j; k < cabecalho->quantidadePessoas - 1; k++){
+          vetorIndice[k] = vetorIndice[k + 1];
+        }
+        break;
       }
     }
     
-    if(strcmp(nomeCampoAtualiza, "idadePessoa") == 0){
-        if(strcmp(valorCampoAtualiza, "NULO") == 0){
-            novaIdadePessoa = -1;
-        } else {
-            novaIdadePessoa = atoi(valorCampoAtualiza);
-        }
-    }
-    else if(strcmp(nomeCampoAtualiza, "nomePessoa") == 0){
-        if(strcmp(valorCampoAtualiza, "NULO") == 0){
-            novoTamNomePessoa = 0;
-            novoNomePessoa[0] = '\0';
-        } else {
-            strcpy(novoNomePessoa, valorCampoAtualiza);
-            novoTamNomePessoa = strlen(valorCampoAtualiza);
-        }
-    }
-    else if(strcmp(nomeCampoAtualiza, "nomeUsuario") == 0){
-        strcpy(novoNomeUsuario, valorCampoAtualiza);
-        novoTamNomeUsuario = strlen(valorCampoAtualiza);
-    }
+    //atualiza quantidadeRemovidos
+    cabecalho->quantidadeRemovidos++;
     
-    //calcula o novo tamanho do registro
-    int novoTamRegistro = 16 + novoTamNomePessoa + novoTamNomeUsuario;
+    //insere como NOVO REGISTRO no final
+    fseek(arqPessoa, cabecalho->proxByteoffset, SEEK_SET);
     
-    if(novoTamRegistro <= tamRegistroAtual){
-        //Caso 1: inserir com lixo
-        //o novo registro cabe no espaço atual
-        
-        fseek(arqPessoa, posRegistro + 5, SEEK_SET); //Pula removido e tamRegistro
-        
-        //escreve os campos atualizados
-        fwrite(&novoId, sizeof(int), 1, arqPessoa);
-        fwrite(&novaIdadePessoa, sizeof(int), 1, arqPessoa);
-        fwrite(&novoTamNomePessoa, sizeof(int), 1, arqPessoa);
-        fwrite(novoNomePessoa, sizeof(char), novoTamNomePessoa, arqPessoa);
-        fwrite(&novoTamNomeUsuario, sizeof(int), 1, arqPessoa);
-        fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
-        
-        //preenche o resto com lixo '$'
-        int bytesEscritos = 16 + novoTamNomePessoa + novoTamNomeUsuario;
-        int bytesLixo = tamRegistroAtual - bytesEscritos;
-        
-        for(int j = 0; j < bytesLixo; j++){
-            char lixo = '$';
-            fwrite(&lixo, sizeof(char), 1, arqPessoa);
-        }
-        
-        fflush(arqPessoa);
-        
-    } else {
-        //Caso 2: remover logicamente e inserir novo registro
-        //o novo registro não cabe no espaço atual
-        
-        //marca o registro atual como removido
-        fseek(arqPessoa, posRegistro, SEEK_SET);
-        char marcaRemovido = '1';
-        fwrite(&marcaRemovido, sizeof(char), 1, arqPessoa);
-        fflush(arqPessoa);
-        
-        //remove do índice
-        for(int j = 0; j < cabecalho->quantidadePessoas; j++){
-            if(vetorIndice[j].idPessoa == idPessoaAtual){
-                // Desloca todos os elementos para a esquerda
-                for(int k = j; k < cabecalho->quantidadePessoas - 1; k++){
-                    vetorIndice[k] = vetorIndice[k + 1];
-                }
-                break;
-            }
-        }
-        
-        //atualiza quantidadeRemovidos
-        cabecalho->quantidadeRemovidos++;
-        
-        //insere como NOVO REGISTRO no final
-        fseek(arqPessoa, cabecalho->proxByteoffset, SEEK_SET);
-        
-        char removidoNovo = '0';
-        fwrite(&removidoNovo, sizeof(char), 1, arqPessoa);
-        fwrite(&novoTamRegistro, sizeof(int), 1, arqPessoa);
-        fwrite(&novoId, sizeof(int), 1, arqPessoa);
-        fwrite(&novaIdadePessoa, sizeof(int), 1, arqPessoa);
-        fwrite(&novoTamNomePessoa, sizeof(int), 1, arqPessoa);
-        fwrite(novoNomePessoa, sizeof(char), novoTamNomePessoa, arqPessoa);
-        
-        fwrite(&novoTamNomeUsuario, sizeof(int), 1, arqPessoa);
-        fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
-        
-        //adiciona ao índice na posição ordenada correta
-        int pos = buscaBinariaVetorIndice(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
-        //vai retornar um valor negativo, já que a busca binária vai retornar a posição onde o id deveria estar, logo precisamos converter pra positivo e subtrair 1
-        //exemplo: retorna -3(deveria estar na posição 2), então pos = -pos -1
-        if(pos >= 0){
-          // puts("ID ja existe");
-        } else{
-          pos = -(pos) - 1;
-        }
+    char removidoNovo = '0';
+    fwrite(&removidoNovo, sizeof(char), 1, arqPessoa);
+    fwrite(&novoTamRegistro, sizeof(int), 1, arqPessoa);
+    fwrite(&novoId, sizeof(int), 1, arqPessoa);
+    fwrite(&novaIdadePessoa, sizeof(int), 1, arqPessoa);
+    fwrite(&novoTamNomePessoa, sizeof(int), 1, arqPessoa);
+    fwrite(novoNomePessoa, sizeof(char), novoTamNomePessoa, arqPessoa);
+    
+    fwrite(&novoTamNomeUsuario, sizeof(int), 1, arqPessoa);
+    fwrite(novoNomeUsuario, sizeof(char), novoTamNomeUsuario, arqPessoa);
+    
+    //adiciona ao índice na posição ordenada correta
+    int pos = buscaBinariaVetorIndice(vetorIndice, cabecalho->quantidadePessoas, idPessoa);
+    //vai retornar um valor negativo, já que a busca binária vai retornar a posição onde o id deveria estar, logo precisamos converter pra positivo e subtrair 1
+    //exemplo: retorna -3(deveria estar na posição 2), então pos = -pos -1
+    if(pos >= 0){
+      // puts("ID ja existe");
+    } else{
+      pos = -(pos) - 1;
+    }
 
-        //desloca para abrir espaço
-        for(int j = cabecalho->quantidadePessoas; j > pos; j--){
-            vetorIndice[j] = vetorIndice[j-1];
-        }
-        
-        //insere o novo índice
-        vetorIndice[pos].idPessoa = idPessoa;
-        vetorIndice[pos].byteOffset = cabecalho->proxByteoffset;
-        
-        //atualiza o cabeçalho
-        cabecalho->proxByteoffset += novoTamRegistro + 5;
-        
-        fflush(arqPessoa);
+    //desloca para abrir espaço
+    for(int j = cabecalho->quantidadePessoas; j > pos; j--){
+      vetorIndice[j] = vetorIndice[j-1];
     }
+    
+    //insere o novo índice
+    vetorIndice[pos].idPessoa = idPessoa;
+    vetorIndice[pos].byteOffset = cabecalho->proxByteoffset;
+    
+    //atualiza o cabeçalho
+    cabecalho->proxByteoffset += novoTamRegistro + 5;
+    
+    fflush(arqPessoa);
+  }
 }
 
 
