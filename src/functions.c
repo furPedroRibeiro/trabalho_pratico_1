@@ -208,177 +208,6 @@ void buscarRegistros(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     fclose(arqPessoa);
 }
 
-// //FUNCIONALIDADE 5:
-// void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
-//     //Abertura dos arquivos
-//     FILE *arqPessoa = abrirArquivoComStatus(nomeArquivoPessoa, "rb+");
-//     FILE *arquivoIndice = abrirArquivoComStatus(nomeArquivoIndice, "rb+");
-    
-//     //Marca os arquivos como inconsistentes durante a operação
-//     defineStatusArquivo(arqPessoa, '0');
-//     defineStatusArquivo(arquivoIndice, '0');
-    
-//     //traz o cabeçalho pra memória primária
-//     cabecalhoPessoa *cabecalho = malloc(sizeof(cabecalhoPessoa));
-//     fseek(arqPessoa, 0, SEEK_SET);
-//     fread(&cabecalho->status[0], sizeof(char), 1, arqPessoa);
-//     fread(&cabecalho->quantidadePessoas, sizeof(int), 1, arqPessoa);
-//     fread(&cabecalho->quantidadeRemovidos, sizeof(int), 1, arqPessoa);
-//     fread(&cabecalho->proxByteoffset, sizeof(long int), 1, arqPessoa);
-//     cabecalho->status[1] = '\0';
-    
-//     fseek(arquivoIndice, 12, SEEK_SET); // pula o cabeçalho para montar vetor de índices
-//     indice *vetorIndice = malloc(cabecalho->quantidadePessoas * sizeof(indice));
-//     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
-//         fread(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-//         fread(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
-//     }
-
-//     //Vetor para marcar IDs que devem ser removidos
-//     int *idsParaRemover = malloc(cabecalho->quantidadePessoas * sizeof(int));
-//     int qtdIdsParaRemover = 0;
-    
-//     //obtém o tamanho do arquivo pessoa
-//     fseek(arqPessoa, 0, SEEK_END);
-//     long sizeDados = ftell(arqPessoa);
-    
-//     //loop de remoções
-//     for(int i = 0; i < n; i++){
-//         int entrada;
-//         char nomeCampo[100], valorCampo[100];
-        
-//                 //Lê a linha de busca
-//         scanf("%d", &entrada);
-//         scanf(" %[^=]", nomeCampo);
-//         getchar(); // Consome o '='
-//         scan_quote_string(valorCampo);
-
-//         // //faz a leitura da entrada através de stdin
-//         // int c = 0; 
-//         // int i = 0;
-//         // char bufferEntrada[1024];
-        
-//         // // lê até EOF, \0 ou \n — cobre todos os casos possíveis porque a entrada no runcodes é de um jeito e pelo teclado para testes é de outro, então ao invés de usar fgets fizemos a adaptação para todos os tipos de terminação de entrada
-//         // while ((c = getchar()) != EOF && c != '\0' && c != '\n') {
-//         //     if (i < sizeof(bufferEntrada) - 1) {
-//         //         bufferEntrada[i++] = c;
-//         //     } else {
-//         //         //limpa o resto da entrada
-//         //         while ((c = getchar()) != EOF && c != '\n');
-//         //         break; // evita estouro de buffer(seg fault)
-//         //     }
-//         // }
-//         // bufferEntrada[i] = '\0'; //coloca o \0 no fim da entrada para usar strtok corretamente
-
-//         // //lendo qual iteração é
-//         // char *parametro;
-//         // parametro = strtok(bufferEntrada, " ");
-//         // entrada = atoi(parametro);
-//         // parametro = strtok(NULL, "=");
-//         // char *campo = removeEspacosEmBranco(parametro);
-//         // strcpy(nomeCampo, campo);
-//         // parametro = strtok(NULL, "=");
-//         // char *valor = removeEspacosEmBranco(parametro);
-//         // strcpy(valorCampo, removerAspas(valor));
-        
-//         if(strcmp(valorCampo, "NULO") == 0){
-//             strcpy(valorCampo, "");
-//         }
-
-//         // printf("%s", nomeCampo);
-//         // printf("%s\n", valorCampo);
-        
-
-//         //somente aqui muda na modularização, mas não está funcionando
-//         //usa a função de busca buscarRegistrosPorCampo
-//         resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, cabecalho->quantidadePessoas, sizeDados, nomeCampo, valorCampo);
-        
-//         //Processa todos os registros encontrados
-//         if(resultados != NULL){
-//             resultadoBusca *atual = resultados;
-//             while(atual != NULL){
-//                 //marca o registro como removido no arquivo de dados
-//                 fseek(arqPessoa, atual->byteOffset, SEEK_SET);
-//                 char removido = '1';
-//                 fwrite(&removido, sizeof(char), 1, arqPessoa);
-//                 fflush(arqPessoa);
-                
-//                 //adiciona o ID à lista de IDs para remover
-//                 idsParaRemover[qtdIdsParaRemover++] = atual->idPessoa;
-                
-//                 atual = atual->proxResultado;
-//             }
-            
-//             //Libera a lista de resultados
-//             liberarListaResultados(resultados);
-//         }
-//     }
-//     //até aqui, o resto é tudo a mesma coisa
-    
-//     // Remove todos os IDs marcados do vetor de índices
-//     for(int i = 0; i < qtdIdsParaRemover; i++){
-//         for(int j = 0; j < cabecalho->quantidadePessoas; j++){
-//             if(vetorIndice[j].idPessoa == idsParaRemover[i]){
-//                 for(int k = j; k < cabecalho->quantidadePessoas - 1; k++){
-//                     vetorIndice[k] = vetorIndice[k + 1];
-//                 }
-//                 cabecalho->quantidadePessoas--;
-//                 break;
-//             }
-//         }
-//     }
-
-//     // atualiza cabeçalho do arquivo pessoas
-//     cabecalho->quantidadeRemovidos += qtdIdsParaRemover;
-
-//     //escreve cabeçalho do arquivo pessoas atualizado
-//     fseek(arqPessoa, 1, SEEK_SET);
-//     fwrite(&cabecalho->quantidadePessoas, sizeof(int), 1, arqPessoa);
-//     fwrite(&cabecalho->quantidadeRemovidos, sizeof(int), 1, arqPessoa);
-    
-//     // Reescreve o arquivo de índice
-//     fclose(arquivoIndice);
-//     remove(nomeArquivoIndice);
-
-//     arquivoIndice = fopen(nomeArquivoIndice, "wb+");
-//     if(arquivoIndice == NULL){
-//         puts("Falha no processamento do arquivo.");
-//         free(vetorIndice);
-//         free(idsParaRemover);
-//         fclose(arqPessoa);
-//         return;
-//     }
-    
-//     // Escreve o cabeçalho do índice
-//     char statusIndice;
-//     statusIndice = '0';
-//     fseek(arquivoIndice, 0, SEEK_SET);
-//     fwrite(&statusIndice, sizeof(char), 1, arquivoIndice);
-//     char lixo[12] = "$$$$$$$$$$$";
-//     fwrite(lixo, sizeof(char), 11, arquivoIndice);
-    
-//     // Escreve os índices após o cabeçalho
-//     for(int i = 0; i < cabecalho->quantidadePessoas; i++){
-//         fwrite(&vetorIndice[i].idPessoa, sizeof(int), 1, arquivoIndice);
-//         fwrite(&vetorIndice[i].byteOffset, sizeof(long int), 1, arquivoIndice);
-//     }
-    
-//     // Marca os arquivos como consistentes
-//     defineStatusArquivo(arqPessoa, '1');
-//     defineStatusArquivo(arquivoIndice, '1');
-    
-//     free(vetorIndice);
-//     free(idsParaRemover);
-
-//     fclose(arqPessoa);
-//     fclose(arquivoIndice);
-    
-//     // Mostra os arquivos binários
-//     binarioNaTela(nomeArquivoPessoa);
-//     binarioNaTela(nomeArquivoIndice);
-// }
-
-
 //FUNCIONALIDADE 5:
 void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     //Abertura dos arquivos
@@ -417,7 +246,7 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     for(int i = 0; i < n; i++){
         int entrada;
         char nomeCampo[100], valorCampo[100];
-        //Lê a linha de busca
+        
         scanf("%d", &entrada);
         scanf(" %[^=]", nomeCampo);
         getchar(); // Consome o '='
@@ -444,50 +273,36 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         if(strcmp(valorCampo, "NULO") == 0){
             strcpy(valorCampo, "");
         }
+        
+        // printf("%s", nomeCampo);
+        // printf("%s\n", valorCampo);
+        
 
+        //somente aqui muda na modularização, mas não está funcionando
         //usa a função de busca buscarRegistrosPorCampo
         resultadoBusca *resultados = buscarRegistrosPorCampo(arqPessoa, vetorIndice, cabecalho->quantidadePessoas, sizeDados, nomeCampo, valorCampo);
         
-        //Processa todos os resultados encontrados
+        //Processa todos os registros encontrados
         if(resultados != NULL){
             resultadoBusca *atual = resultados;
             while(atual != NULL){
-                // Verifica se o ID já foi adicionado (evita duplicatas)
-                int jaDuplicado = 0;
-                for(int k = 0; k < qtdIdsParaRemover; k++){
-                    if(idsParaRemover[k] == atual->idPessoa){
-                        jaDuplicado = 1;
-                        break;
-                    }
-                }
-                if(!jaDuplicado){
-                    idsParaRemover[qtdIdsParaRemover++] = atual->idPessoa;
-                }
+                //marca o registro como removido no arquivo de dados
+                fseek(arqPessoa, atual->byteOffset, SEEK_SET);
+                char removido = '1';
+                fwrite(&removido, sizeof(char), 1, arqPessoa);
+                fflush(arqPessoa);
+                
+                //adiciona o ID à lista de IDs para remover
+                idsParaRemover[qtdIdsParaRemover++] = atual->idPessoa;
+                
                 atual = atual->proxResultado;
             }
-            // Libera a memória da lista
+            
+            //Libera a lista de resultados
             liberarListaResultados(resultados);
         }
     }
-    
-    // Marca todos os registros como removidos no arquivo
-    for(int i = 0; i < qtdIdsParaRemover; i++){
-        // Busca o byteOffset do ID no vetor de índices
-        long int offsetParaRemover = -1;
-        for(int j = 0; j < cabecalho->quantidadePessoas; j++){
-            if(vetorIndice[j].idPessoa == idsParaRemover[i]){
-                offsetParaRemover = vetorIndice[j].byteOffset;
-                break;
-            }
-        }
-        
-        if(offsetParaRemover != -1){
-            fseek(arqPessoa, offsetParaRemover, SEEK_SET);
-            char removido = '1';
-            fwrite(&removido, sizeof(char), 1, arqPessoa);
-        }
-    }
-    fflush(arqPessoa);
+    //até aqui, o resto é tudo a mesma coisa
     
     // Remove todos os IDs marcados do vetor de índices
     for(int i = 0; i < qtdIdsParaRemover; i++){
@@ -519,13 +334,13 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
         puts("Falha no processamento do arquivo.");
         free(vetorIndice);
         free(idsParaRemover);
-        free(cabecalho);
         fclose(arqPessoa);
         return;
     }
     
     // Escreve o cabeçalho do índice
-    char statusIndice = '0';
+    char statusIndice;
+    statusIndice = '0';
     fseek(arquivoIndice, 0, SEEK_SET);
     fwrite(&statusIndice, sizeof(char), 1, arquivoIndice);
     char lixo[12] = "$$$$$$$$$$$";
@@ -543,7 +358,6 @@ void deletarRegistro(char *nomeArquivoPessoa, char *nomeArquivoIndice, int n){
     
     free(vetorIndice);
     free(idsParaRemover);
-    free(cabecalho);
 
     fclose(arqPessoa);
     fclose(arquivoIndice);
