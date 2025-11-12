@@ -343,16 +343,19 @@ void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *no
 }
 
 //função responsavel por adicionar um nó no final da lista de resultados de busca
-void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, struct registro_2 *reg, long int byteOffset){
+void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, registro *reg, long int byteOffset){
   resultadoBusca *novoResultado = calloc(1, sizeof(resultadoBusca));
   
+  //aloca memória para o registro dentro do resultado
+  novoResultado->reg = malloc(sizeof(registro));
+  
   //copia os campos do registro encontrado
-  novoResultado->idPessoa = reg->idPessoa;
-  novoResultado->idadePessoa = reg->idadePessoa;
-  novoResultado->tamNomePessoa = reg->tamNomePessoa;
-  strcpy(novoResultado->nomePessoa, reg->nomePessoa);
-  novoResultado->tamNomeUsuario = reg->tamNomeUsuario;
-  strcpy(novoResultado->nomeUsuario, reg->nomeUsuario);
+  novoResultado->reg->idPessoa = reg->idPessoa;
+  novoResultado->reg->idadePessoa = reg->idadePessoa;
+  novoResultado->reg->tamanhoNomePessoa = reg->tamanhoNomePessoa;
+  strcpy(novoResultado->reg->nome, reg->nome);
+  novoResultado->reg->tamanhoNomeUsuario = reg->tamanhoNomeUsuario;
+  strcpy(novoResultado->reg->nomeUsuario, reg->nomeUsuario);
   novoResultado->byteOffset = byteOffset;
   novoResultado->proxResultado = NULL;
   
@@ -376,20 +379,54 @@ void liberarListaResultados(resultadoBusca *raizLista){
   }
 }
 
-resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, noIndice *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo){
+resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo){
   //inicializa a lista de resultados
   resultadoBusca *raizListaResultados = NULL;
   resultadoBusca *ultimoResultado = NULL;
-  struct registro_2 reg;
+  registro reg;
   
-  if(strcmp(nomeCampo, "idPessoa") == 0){
+  // Se nomeCampo for NULL, lista todos os registros
+  if(nomeCampo == NULL){
+    fseek(arqPessoa, 17, SEEK_SET); //pula o cabeçalho
+    
+    while(ftell(arqPessoa) < sizeDados){
+      long int offsetAtual = ftell(arqPessoa);
+      
+      char removido;
+      fread(&removido, sizeof(char), 1, arqPessoa);
+      int tamRegistro;
+      fread(&tamRegistro, sizeof(int), 1, arqPessoa);
+      
+      if (removido == '1') {
+          fseek(arqPessoa, tamRegistro, SEEK_CUR);
+          continue;
+      }
+      
+      //lê os campos do registro
+      fread(&reg.idPessoa, sizeof(int), 1, arqPessoa);
+      fread(&reg.idadePessoa, sizeof(int), 1, arqPessoa);
+      fread(&reg.tamanhoNomePessoa, sizeof(int), 1, arqPessoa);
+      fread(reg.nome, sizeof(char), reg.tamanhoNomePessoa, arqPessoa);
+      reg.nome[reg.tamanhoNomePessoa] = '\0';        
+      fread(&reg.tamanhoNomeUsuario, sizeof(int), 1, arqPessoa);
+      fread(reg.nomeUsuario, sizeof(char), reg.tamanhoNomeUsuario, arqPessoa);
+      reg.nomeUsuario[reg.tamanhoNomeUsuario] = '\0';
+      
+      // Adiciona todos os registros não removidos
+      adicionarResultadoBusca(&raizListaResultados, &ultimoResultado, &reg, offsetAtual);
+      
+      // vai para o próximo registro
+      fseek(arqPessoa, offsetAtual + 5 + tamRegistro, SEEK_SET);
+    }
+  }
+  else if(strcmp(nomeCampo, "idPessoa") == 0){
     int idBusca = atoi(valorCampo);
     long int offset;
     int posRetornada = buscaBinariaVetorIndice(vetorIndice, qtdIndice, idBusca);
     if(posRetornada < 0){
       offset = -1;
     } else{
-      offset = vetorIndice[posRetornada].byteoffset;
+      offset = vetorIndice[posRetornada].byteOffset;
     }
     if(offset != -1){
       fseek(arqPessoa, offset, SEEK_SET);
@@ -404,12 +441,12 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, noIndice *vetorIndice, 
         
         fread(&reg.idPessoa, sizeof(int), 1, arqPessoa);
         fread(&reg.idadePessoa, sizeof(int), 1, arqPessoa);
-        fread(&reg.tamNomePessoa, sizeof(int), 1, arqPessoa);
-        fread(reg.nomePessoa, sizeof(char), reg.tamNomePessoa, arqPessoa);
-        reg.nomePessoa[reg.tamNomePessoa] = '\0';
-        fread(&reg.tamNomeUsuario, sizeof(int), 1, arqPessoa);
-        fread(reg.nomeUsuario, sizeof(char), reg.tamNomeUsuario, arqPessoa);
-        reg.nomeUsuario[reg.tamNomeUsuario] = '\0';
+        fread(&reg.tamanhoNomePessoa, sizeof(int), 1, arqPessoa);
+        fread(reg.nome, sizeof(char), reg.tamanhoNomePessoa, arqPessoa);
+        reg.nome[reg.tamanhoNomePessoa] = '\0';
+        fread(&reg.tamanhoNomeUsuario, sizeof(int), 1, arqPessoa);
+        fread(reg.nomeUsuario, sizeof(char), reg.tamanhoNomeUsuario, arqPessoa);
+        reg.nomeUsuario[reg.tamanhoNomeUsuario] = '\0';
         
         adicionarResultadoBusca(&raizListaResultados, &ultimoResultado, &reg, offset);
       }
@@ -431,12 +468,12 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, noIndice *vetorIndice, 
       //lê os campos do registro
       fread(&reg.idPessoa, sizeof(int), 1, arqPessoa);
       fread(&reg.idadePessoa, sizeof(int), 1, arqPessoa);
-      fread(&reg.tamNomePessoa, sizeof(int), 1, arqPessoa);
-      fread(reg.nomePessoa, sizeof(char), reg.tamNomePessoa, arqPessoa);
-      reg.nomePessoa[reg.tamNomePessoa] = '\0';        
-      fread(&reg.tamNomeUsuario, sizeof(int), 1, arqPessoa);
-      fread(reg.nomeUsuario, sizeof(char), reg.tamNomeUsuario, arqPessoa);
-      reg.nomeUsuario[reg.tamNomeUsuario] = '\0';
+      fread(&reg.tamanhoNomePessoa, sizeof(int), 1, arqPessoa);
+      fread(reg.nome, sizeof(char), reg.tamanhoNomePessoa, arqPessoa);
+      reg.nome[reg.tamanhoNomePessoa] = '\0';        
+      fread(&reg.tamanhoNomeUsuario, sizeof(int), 1, arqPessoa);
+      fread(reg.nomeUsuario, sizeof(char), reg.tamanhoNomeUsuario, arqPessoa);
+      reg.nomeUsuario[reg.tamanhoNomeUsuario] = '\0';
       
       //compara o campo solicitado com o valor buscado
       int encontrado = 0;
@@ -453,18 +490,18 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, noIndice *vetorIndice, 
       }
       else if(strcmp(nomeCampo, "nomePessoa") == 0){
         if(strlen(valorCampo) == 0){
-          if(reg.tamNomePessoa == 0){
+          if(reg.tamanhoNomePessoa == 0){
             encontrado = 1;
           }
         } else {
-          if(strcmp(reg.nomePessoa, valorCampo) == 0){
+          if(strcmp(reg.nome, valorCampo) == 0){
             encontrado = 1;
           }
         }
       }
       else if(strcmp(nomeCampo, "nomeUsuario") == 0){
         if(strlen(valorCampo) == 0){
-          if(reg.tamNomeUsuario == 0){
+          if(reg.tamanhoNomeUsuario == 0){
             encontrado = 1;
           }
         } else {
@@ -478,7 +515,6 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, noIndice *vetorIndice, 
       }
       
       // vai para o próximo registro usando tamRegistro
-      // Próximo registro começa em: offsetAtual + 1 (removido) + 4 (tamRegistro) + tamRegistro
       fseek(arqPessoa, offsetAtual + 5 + tamRegistro, SEEK_SET);
     }
   }
@@ -487,32 +523,35 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, noIndice *vetorIndice, 
 }
 
 //imprimir registro encontrado por byteOffset
-void imprimirRegistroPorByteOffset(FILE *arqPessoa, long int byteOffset, struct registro_2 reg){
+void imprimirRegistroPorByteOffset(FILE *arqPessoa, long int byteOffset){
     //posiciona o ponteiro no registro 
     fseek(arqPessoa, byteOffset, SEEK_SET);
 
     char removido;
     fread(&removido, sizeof(char), 1, arqPessoa);
     if (removido == '1'){
-        return; // registro marcado como removido
+      return; // registro marcado como removido
     }
 
     //le o tamanho do registro
     int tamRegistro;
     fread(&tamRegistro, sizeof(int), 1, arqPessoa);
 
+    //cria registro local para ler os dados
+    registro reg;
+    
     //lê cada campo do registro
     fread(&reg.idPessoa, sizeof(int), 1, arqPessoa);
     fread(&reg.idadePessoa, sizeof(int), 1, arqPessoa);
-    fread(&reg.tamNomePessoa, sizeof(int), 1, arqPessoa);
-    fread(&reg.nomePessoa, sizeof(char), reg.tamNomePessoa, arqPessoa);
-    reg.nomePessoa[reg.tamNomePessoa] = '\0';
-    fread(&reg.tamNomeUsuario, sizeof(int), 1, arqPessoa);
-    fread(&reg.nomeUsuario, sizeof(char), reg.tamNomeUsuario, arqPessoa);
-    reg.nomeUsuario[reg.tamNomeUsuario] = '\0';
+    fread(&reg.tamanhoNomePessoa, sizeof(int), 1, arqPessoa);
+    fread(reg.nome, sizeof(char), reg.tamanhoNomePessoa, arqPessoa);
+    reg.nome[reg.tamanhoNomePessoa] = '\0';
+    fread(&reg.tamanhoNomeUsuario, sizeof(int), 1, arqPessoa);
+    fread(reg.nomeUsuario, sizeof(char), reg.tamanhoNomeUsuario, arqPessoa);
+    reg.nomeUsuario[reg.tamanhoNomeUsuario] = '\0';
 
     //usa função auxiliar para imprimir
-    imprimirRegistro(reg.idPessoa, reg.idadePessoa, reg.tamNomePessoa, reg.nomePessoa, reg.tamNomeUsuario, reg.nomeUsuario);
+    imprimirRegistro(reg.idPessoa, reg.idadePessoa, reg.tamanhoNomePessoa, reg.nome, reg.tamanhoNomeUsuario, reg.nomeUsuario);
 }
 
 
@@ -626,20 +665,20 @@ void insereRegistroUnicoPessoa(FILE *nomeArquivoPessoa, noRegistroUnico* regUnic
   fwrite(&proxByteoffset, sizeof(long int), 1, nomeArquivoPessoa);
 }
 
-noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n){
+indice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n){
   //o arquivo já está aberto, e n é o número de registros ativos
   //o array para o vetor de indices é criada com 1 espaço a mais porque vamos inserir um novo registro a esse array posteriormente, então precisa ter esse espaço para que ocorra o deslocamento e a inserção correta do novo registroz
-  noIndice *indices = malloc((n+mais_n) * sizeof(noIndice));
+  indice *indices = malloc((n+mais_n) * sizeof(indice));
   fseek(nomeArquivoIndice, 12, SEEK_SET); //posiciona ponteiro de leitura no primeiro registro
   for(int i = 0; i < n; i++){
     fread(&indices[i].idPessoa, sizeof(int), 1, nomeArquivoIndice);
-    fread(&indices[i].byteoffset, sizeof(long int), 1, nomeArquivoIndice);
+    fread(&indices[i].byteOffset, sizeof(long int), 1, nomeArquivoIndice);
   }
   //depois da leitura, retorna o vetor de indices
   return indices;
 }
 
-void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, long int byteoffset){
+void insereRegistroUnicoVetorIndice(indice* indices, int tamanhoVetor, int idPessoa, long int byteoffset){
   //o conceito de busca binária é utilizado para retornar uma posição válida em que o registro pode ser inserido
   int pos = buscaBinariaVetorIndice(indices, tamanhoVetor, idPessoa);
   //vai retornar um valor negativo, já que a busca binária vai retornar a posição onde o id deveria estar, logo precisamos converter pra positivo e subtrair 1
@@ -652,17 +691,17 @@ void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idP
     indices[i] = indices[i-1];
   }
   indices[pos].idPessoa = idPessoa;
-  indices[pos].byteoffset = byteoffset;
+  indices[pos].byteOffset = byteoffset;
   //feito isso, o vetor está atualizado e 100% pronto para voltar para memória secundária
 }
 
-void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
+void insereIndice(indice* indices, FILE *nomeArquivoIndice, int tamanho){
   //o indice será todo reescrito em memória secundária, como aqui estamos escrevendo um registro a mais, o tamanho do arquivo anterior pouco nos importa
   //o status já está definido como inconsistente, agora só nos resta pular o cabeçalho e reescrever tudo
   fseek(nomeArquivoIndice, 12, SEEK_SET);
   for(int i = 0; i < tamanho; i++){
     fwrite(&indices[i].idPessoa, sizeof(int), 1, nomeArquivoIndice);
-    fwrite(&indices[i].byteoffset, sizeof(long int), 1, nomeArquivoIndice);
+    fwrite(&indices[i].byteOffset, sizeof(long int), 1, nomeArquivoIndice);
   }
   //depois de escrever tudo:
   return;
@@ -674,7 +713,7 @@ void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho){
 // ======================= FUNÇÕES PARA FUNCIONALIDADE 7: =======================
 
 //função auxiliar para atualizar um registro individual
-void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, noIndice *vetorIndice, int idPessoaAtual){
+void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual){
     //posiciona no registro
     fseek(arqPessoa, posRegistro, SEEK_SET);
     
@@ -821,7 +860,7 @@ void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *no
         
         //insere o novo índice
         vetorIndice[pos].idPessoa = idPessoa;
-        vetorIndice[pos].byteoffset = cabecalho->proxByteoffset;
+        vetorIndice[pos].byteOffset = cabecalho->proxByteoffset;
         
         //atualiza o cabeçalho
         cabecalho->proxByteoffset += novoTamRegistro + 5;
@@ -1044,7 +1083,7 @@ void imprimirJuncao(int idPessoa, int idadePessoa, int tamNomePessoa, char *nome
   se ID não existe: retorna -(posição_inserção + 1)
   exemplo: retorna -3 significa "não existe, deveria estar na posição 2", retorna assim porque se deve estar na posição 0, não posso retornar 0 se não confunde com a posição de um id existente, deve ser um valor negativo sempre que retornar a posição onde deveria estar o id buscado
 */
-int buscaBinariaVetorIndice(noIndice* indices, int tamanho, int idPessoa) {
+int buscaBinariaVetorIndice(indice* indices, int tamanho, int idPessoa) {
     int inicio = 0;
     int fim = tamanho - 1;
     
@@ -1136,4 +1175,25 @@ char *removerAspas(char *campo){
 void defineStatusArquivo(FILE *arquivo, char status){
   fseek(arquivo, 0, SEEK_SET);  //posiciona ponteiro no byte 0
   fwrite(&status, sizeof(char), 1, arquivo); //escreve status
+}
+
+void lerValorCampo(char *valorCampo) {
+	//verifica se o valor tem aspas ou não
+	char c = getchar();
+	if(c == '"'){
+		//Valor entre aspas - lê até a próxima aspa
+		int j = 0;
+		while((c = getchar()) != '"' && c != '\n' && c != EOF){
+			valorCampo[j++] = c;
+		}
+		valorCampo[j] = '\0';
+	} else {
+		//Valor sem aspas - lê até o fim da linha
+		valorCampo[0] = c;
+		int j = 1;
+		while((c = getchar()) != '\n' && c != EOF){
+			valorCampo[j++] = c;
+		}
+		valorCampo[j] = '\0';
+	}
 }

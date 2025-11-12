@@ -25,12 +25,12 @@ typedef struct registro{
 } registro;
 
 // Estrutura auxiliar para armazenar os campos de um registro(usada para a funcionalidade 3 e 4)
-struct registro_2 {
-    int idPessoa, idadePessoa;
-    int tamNomePessoa, tamNomeUsuario;
-    char nomePessoa[100];
-    char nomeUsuario[100];
-};
+// struct registro_2 {
+//     int idPessoa, idadePessoa;
+//     int tamNomePessoa, tamNomeUsuario;
+//     char nomePessoa[100];
+//     char nomeUsuario[100];
+// };
 
 //estrutura de dados do tipo lista duplamente encadeada para armazenar os registros do arquivo de índice antes de inseri-lo, é duplamente encadeada pois na hora da inserção é necessário inserir um registro no meio de outros registros, necessitando assim que seja verificado o nó anterior e o próximo da lista(talvez na implementação da inserção seja observado que a lista não tem necessidade de ser duplamente encadeada, mas para maior eficiência no futuro, é duplamente encadeada desde já) 
 typedef struct indice{
@@ -40,21 +40,16 @@ typedef struct indice{
   struct indice *antIndice;
 } indice;
 
-typedef struct noIndice{
-  int idPessoa;
-  long int byteoffset;
-} noIndice;
+// typedef struct noIndice{
+//   int idPessoa;
+//   long int byteoffset;
+// } noIndice;
 
 
 
 //estrutura de dados do tipo lista duplamente encadeada para armazenar os campos encontrados na busca
 typedef struct resultadoBusca{
-  int idPessoa;
-  int idadePessoa;
-  int tamNomePessoa;
-  char nomePessoa[100];
-  int tamNomeUsuario;
-  char nomeUsuario[100];
+  registro *reg;
   long int byteOffset;
   struct resultadoBusca *proxResultado;
 } resultadoBusca;
@@ -103,12 +98,11 @@ FILE* abrirArquivoComStatus(const char *nomeArquivo, const char *modo);
 void imprimirRegistro(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario);
 //busca binaria para encontrar o byteOffset do registro com o id buscado
 // long int buscaBinariaIndice(indice *vetor, int tamanho, int idBuscado);
-// long int buscaBinariaIndice2(indice2 *vetor, int tamanho, int idBuscado);
-void imprimirRegistroPorByteOffset(FILE *arqPessoa, long int byteOffset, struct registro_2 reg);
+void imprimirRegistroPorByteOffset(FILE *arqPessoa, long int byteOffset);
 
 //para a função 4, busca
-resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, noIndice *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo);
-void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, struct registro_2 *reg, long int byteOffset);
+resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, int qtdIndice, long sizeDados, char *nomeCampo, char *valorCampo);
+void adicionarResultadoBusca(resultadoBusca **raizLista, resultadoBusca **ultimoResultado, struct registro *reg, long int byteOffset);
 void liberarListaResultados(resultadoBusca *raizLista);
 
 
@@ -117,12 +111,12 @@ void liberarListaResultados(resultadoBusca *raizLista);
 cabecalhoPessoa* lerCabecalho(FILE *nomeArquivo);
 noRegistroUnico* lerEntradaInsercaoUnica();
 void insereRegistroUnicoPessoa(FILE *nomeArquivoPessoa, noRegistroUnico* regUnico, cabecalhoPessoa* cabecalho);
-noIndice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n);
-void insereRegistroUnicoVetorIndice(noIndice* indices, int tamanhoVetor, int idPessoa, long int byteoffset);
-void insereIndice(noIndice* indices, FILE *nomeArquivoIndice, int tamanho);
+indice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n);
+void insereRegistroUnicoVetorIndice(indice* indices, int tamanhoVetor, int idPessoa, long int byteoffset);
+void insereIndice(indice* indices, FILE *nomeArquivoIndice, int tamanho);
 
 // ===================== funções para a funcionalidade 7: =====================
-void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, noIndice *vetorIndice, int idPessoaAtual);
+void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual);
 // int buscaBinariaAtualizar(indice* vetorIndice, int tamanho, int idPessoa);
 
 
@@ -153,11 +147,12 @@ void imprimirJuncao(int idPessoa, int idadePessoa, int tamNomePessoa, char *nome
 
 
 // ===================== funções de uso geral =====================
-int buscaBinariaVetorIndice(noIndice* indices, int tamanho, int idPessoa);
+int buscaBinariaVetorIndice(indice* indices, int tamanho, int idPessoa);
 char *removeEspacosEmBranco(char *campo);
 char *removerAspas(char *campo);
 void defineStatusArquivo(FILE *arquivo, char status);
 //função strsep aqui(não roda em windows a função strsep definida direto pelo GNU(se não me engano))
 char* meu_strsep(char** , const char* delim);
+void lerValorCampo(char *valorCampo);
 
 #endif
