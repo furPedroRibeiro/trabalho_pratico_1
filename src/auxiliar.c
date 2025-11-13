@@ -305,7 +305,6 @@ FILE* abrirArquivoComStatus(const char *nomeArquivo, const char *modo) {
     FILE *arquivo = fopen(nomeArquivo, modo);
     if (arquivo == NULL) {
         puts("Falha no processamento do arquivo.");
-        fclose(arquivo);
         exit(0);
     }
 
@@ -503,6 +502,8 @@ resultadoBusca* buscarRegistrosPorCampo(FILE *arqPessoa, indice *vetorIndice, in
       else if(strcmp(nomeCampo, "nomeUsuario") == 0){
         if(strcmp(reg.nomeUsuario, valorCampo) == 0){
           encontrado = 1;
+          adicionarResultadoBusca(&raizListaResultados, &ultimoResultado, &reg, offsetAtual);
+          return raizListaResultados;
         }
       }
       if(encontrado == 1){

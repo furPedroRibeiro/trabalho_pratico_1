@@ -24,14 +24,6 @@ typedef struct registro{
   struct registro *proxRegistro;
 } registro;
 
-// Estrutura auxiliar para armazenar os campos de um registro(usada para a funcionalidade 3 e 4)
-// struct registro_2 {
-//     int idPessoa, idadePessoa;
-//     int tamNomePessoa, tamNomeUsuario;
-//     char nomePessoa[100];
-//     char nomeUsuario[100];
-// };
-
 //estrutura de dados do tipo lista duplamente encadeada para armazenar os registros do arquivo de índice antes de inseri-lo, é duplamente encadeada pois na hora da inserção é necessário inserir um registro no meio de outros registros, necessitando assim que seja verificado o nó anterior e o próximo da lista(talvez na implementação da inserção seja observado que a lista não tem necessidade de ser duplamente encadeada, mas para maior eficiência no futuro, é duplamente encadeada desde já) 
 typedef struct indice{
   int idPessoa;
@@ -39,13 +31,6 @@ typedef struct indice{
   struct indice *proxIndice;
   struct indice *antIndice;
 } indice;
-
-// typedef struct noIndice{
-//   int idPessoa;
-//   long int byteoffset;
-// } noIndice;
-
-
 
 //estrutura de dados do tipo lista duplamente encadeada para armazenar os campos encontrados na busca
 typedef struct resultadoBusca{
@@ -115,7 +100,9 @@ indice* lerArquivoIndice(FILE *nomeArquivoIndice, int n, int mais_n);
 void insereRegistroUnicoVetorIndice(indice* indices, int tamanhoVetor, int idPessoa, long int byteoffset);
 void insereIndice(indice* indices, FILE *nomeArquivoIndice, int tamanho);
 
+
 // ===================== funções para a funcionalidade 7: =====================
+
 void atualizarRegistroIndividual(FILE *arqPessoa, long int posRegistro, char *nomeCampoAtualiza, char *valorCampoAtualiza, cabecalhoPessoa *cabecalho, indice *vetorIndice, int idPessoaAtual);
 // int buscaBinariaAtualizar(indice* vetorIndice, int tamanho, int idPessoa);
 
@@ -141,7 +128,8 @@ void insereArquivoSegue(FILE *arqSegue, noSegue *noAtual);
 int comparaParaOrdenar(const void *a, const void *b);
 void escreveSegueOrdenado(FILE *arqOrdenado, int sizeArray, noSegue *registros);
 
-//Funções para funcionalidade 10
+// ===================== funções para funcionalidade 10: =====================
+
 long int buscaBinariaSegueModificada(noSegue *registros, int tamanho, int idPessoaBuscado);
 void imprimirJuncao(int idPessoa, int idadePessoa, int tamNomePessoa, char *nomePessoa, int tamNomeUsuario, char *nomeUsuario, noSegue *registrosSegue, int tamanhoSegue, int idPessoaBuscado);
 
